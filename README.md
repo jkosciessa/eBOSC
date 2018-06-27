@@ -14,7 +14,7 @@ The eBOSC library is distributed in the hope that it will be useful, but WITHOUT
 
 If you find the method useful, please cite the following papers:
 
-Kosciessa, J. Q., Grandy, T. H., Garrett, D. D., Werkle-Bergner, M. (submitted). Single-trial characterization of neural rhythms: potentials and challenges. Single-trial characterization of neural rhythms: potentials and challenges. bioRxiv 356089; doi: https://doi.org/10.1101/356089
+Kosciessa, J. Q., Grandy, T. H., Garrett, D. D., Werkle-Bergner, M. (submitted). Single-trial characterization of neural rhythms: potentials and challenges. bioRxiv 356089; doi: https://doi.org/10.1101/356089
 
 Whitten, T. A., Hughes, A. M., Dickson, C. T., & Caplan, J. B. (2011). A better oscillation detection method robustly extracts EEG rhythms across brain state changes: The human alpha rhythm as a test case. NeuroImage, 54(2), 860–874. http://doi.org/10.1016/j.neuroimage.2010.08.064
 
