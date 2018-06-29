@@ -1,6 +1,8 @@
-% original: /Volumes/EEG/BOSC_Simulation/17_JQK_RED/A_scripts/G_SupplementFigure1.m
+% Reproduce Supplemental Figure 1
 
 %% load measures etc.
+
+% CHOOSE OUTPUT FOLDERS
 
 pn.data = '/Volumes/EEG/BOSC_Simulation/17_JQK_RED/D_data/D_simulation/';
 pn.plotFolder = '/Volumes/EEG/BOSC_Simulation/17_JQK_RED/B_figures/';
@@ -25,15 +27,8 @@ abundance_meanPep = Standard.abundance_meanPep; % average of pepisodes in alpha 
 % Load information about simulation
 
 % amount of simulated sample points (according to cycles below)
-
-%AmountExt = load([pn.data, 'Amount_170626.mat'], 'Amount'); % vector with amount of simulated alpha sample points
 AmountExt = ExtendedA.Amount;
-
-%AmountStd = load([pn.data, 'Amount_standardBOSC_170410.mat'], 'Amount'); % vector with amount of simulated alpha sample points
 AmountStd = Standard.Amount;
-
-% The above should be the same.
-
 Amount = AmountExt;
 
 amplitude = [0 2 4 6 8 12 16 24];
@@ -41,7 +36,6 @@ cycles = [2 4 8 16 32 64 128 200];
 alphaFreq = 10;
 
 amountAlpha = round(round((cycles/alphaFreq),3)/0.004,0);
-
 amountAlpha(end) = 3500; % final abundance is 1, i.e. covering the entire period
 
 % method x amplitude x cycles x repetitions [for extended BOSC]

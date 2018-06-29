@@ -7,9 +7,7 @@
 
 % For reproducibility, we use a fixed seed.
 
-% set output path
-
-pn.out = "";
+pn.backgroundData = ""; % set output path
 
 % initialize background matrix
 bckgrnd      = zeros(1000,5000);
