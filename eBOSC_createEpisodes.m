@@ -34,8 +34,6 @@ function [detected_new,episodes] = eBOSC_createEpisodes(B,detected,cfg)
 %           detected = detected oscillations in B (based on power and duration threshold)
 %           cfg      - .eBOSC.F           = frequency resolution of B (log-scaled!)
 %                    - .eBOSC.fsample     = sampling frequency
-%                    - .eBOSC.fres        = relative frequency resolution within which
-%                                     smaller peaks are ignored
 %                    - .eBOSC.wavenumber  = wavenumber in time-frequency analysis
 %                    - .eBOSC.npnts       = length of data (in data points)
 %                    - .eBOSC.fstp        = maximal step size of frequencies from one
