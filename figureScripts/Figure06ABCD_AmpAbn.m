@@ -39,11 +39,11 @@
 
 %% save Figure data
 
-save('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/F7.mat', 'Figure7')
+%save('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/F7.mat', 'Figure7')
 
 %% load Figure data
 
-load('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/F7.mat', 'Figure7')
+% load('/Users/kosciessa/Desktop/eBOSC/figureData/F6.mat', 'Figure7')
 
 %% Plot
 

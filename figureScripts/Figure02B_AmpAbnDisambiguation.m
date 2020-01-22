@@ -47,40 +47,48 @@
 
 %% load Figure data
 
-load('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/F3B.mat', 'Figure3B');
+load('/Users/kosciessa/Desktop/eBOSC/figureData/F2B.mat', 'Figure3B');
 
 %% plot Figure
 
-h = figure('units','normalized','position',[0 0 1 .6]);
-subplot(2,4,1); imagesc(Figure3B.Sine_oAmp); title({'Pure Sine:'; 'Overall amplitude'}); colorbar;
-ylabel('Simulated amplitudes'); xlabel('Simulated cycles (Simulated abundance)');
+h = figure('units','normalized','position',[0 0 .6 .7]);
+subplot(2,4,1); imagesc(Figure3B.Sine_oAmp); title({'Pure Sine:'; 'Overall amplitude'}); colorbar('location', 'SouthOutside');
+ylabel('Simulated amplitudes'); xlabel({'Simulated cycles';'(Simulated abundance)'});
 set(gca, 'YTick', 1:3:16); set(gca, 'XTick', 1:3:15); set(gca, 'YTickLabels', Figure3B.Sine_ampSNR(2:3:end)); set(gca, 'XTickLabels', Figure3B.Sine_cycLabel(1:3:14));
-subplot(2,4,2); imagesc(Figure3B.Sine_Amp); title({'Pure Sine:'; 'Rhythmic amplitude'}); colorbar;
-ylabel('Simulated amplitudes'); xlabel('Simulated cycles (Simulated abundance)');
+subplot(2,4,2); imagesc(Figure3B.Sine_Amp); title({'Pure Sine:'; 'Rhythmic amplitude'}); colorbar('location', 'SouthOutside');
+ylabel('Simulated amplitudes'); xlabel({'Simulated cycles';'(Simulated abundance)'});
 set(gca, 'YTick', 1:3:16); set(gca, 'XTick', 1:3:15); set(gca, 'YTickLabels', Figure3B.Sine_ampSNR(2:3:end)); set(gca, 'XTickLabels', Figure3B.Sine_cycLabel(1:3:14));
-subplot(2,4,3); imagesc(Figure3B.Sine_Abn, [0 1]); title({'Pure Sine:'; 'Rhythmic abundance'}); colorbar;
-ylabel('Simulated amplitudes'); xlabel('Simulated cycles (Simulated abundance)');
+subplot(2,4,3); imagesc(Figure3B.Sine_Abn, [0 1]); title({'Pure Sine:'; 'Rhythmic abundance'}); colorbar('location', 'SouthOutside');
+ylabel('Simulated amplitudes'); xlabel({'Simulated cycles';'(Simulated abundance)'});
 set(gca, 'YTick', 1:3:16); set(gca, 'XTick', 1:3:15); set(gca, 'YTickLabels', Figure3B.Sine_ampSNR(2:3:end)); set(gca, 'XTickLabels', Figure3B.Sine_cycLabel(1:3:14));
-subplot(2,4,4); imagesc(Figure3B.Sine_Ratio, [0 1]); title({'Pure Sine:'; 'Ratio of overall to rhythmic amplitude'}); colorbar;
-ylabel('Simulated amplitudes'); xlabel('Simulated cycles (Simulated abundance)');
+subplot(2,4,4); imagesc(Figure3B.Sine_Ratio, [0 1]); title({'Pure Sine:'; 'Ratio: overall/rhythmic'}); colorbar('location', 'SouthOutside');
+ylabel('Simulated amplitudes'); xlabel({'Simulated cycles';'(Simulated abundance)'});
 set(gca, 'YTick', 1:3:16); set(gca, 'XTick', 1:3:15); set(gca, 'YTickLabels', Figure3B.Sine_ampSNR(2:3:end)); set(gca, 'XTickLabels', Figure3B.Sine_cycLabel(1:3:14));
 
 % plot the same data with simulated background
 
-subplot(2,4,5); imagesc(Figure3B.Signal_oAmp); title({'Sine+1/f:'; 'Overall amplitude'}); colorbar;
-ylabel('Simulated amplitudes'); xlabel('Simulated cycles (Simulated abundance)');
+subplot(2,4,5); imagesc(Figure3B.Signal_oAmp); title({'Sine+1/f:'; 'Overall amplitude'}); colorbar('location', 'SouthOutside');
+ylabel('Simulated amplitudes'); xlabel({'Simulated cycles';'(Simulated abundance)'});
 set(gca, 'YTick', 1:2:8); set(gca, 'XTick', 1:2:8); set(gca, 'YTickLabels', Figure3B.Signal_ampSNR(2:2:end)); set(gca, 'XTickLabels', Figure3B.Signal_cycLabel(2:2:end));
-subplot(2,4,6); imagesc(Figure3B.Signal_Amp); title({'Sine+1/f:'; 'Rhythmic amplitude'}); colorbar;
-ylabel('Simulated amplitudes'); xlabel('Simulated cycles (Simulated abundance)');
+subplot(2,4,6); imagesc(Figure3B.Signal_Amp); title({'Sine+1/f:'; 'Rhythmic amplitude'}); colorbar('location', 'SouthOutside');
+ylabel('Simulated amplitudes'); xlabel({'Simulated cycles';'(Simulated abundance)'});
 set(gca, 'YTick', 1:2:8); set(gca, 'XTick', 1:2:8); set(gca, 'YTickLabels', Figure3B.Signal_ampSNR(2:2:end)); set(gca, 'XTickLabels', Figure3B.Signal_cycLabel(2:2:end));
-subplot(2,4,7); imagesc(Figure3B.Signal_Abn, [0 1]); title({'Sine+1/f:'; 'Rhythmic abundance'}); colorbar;
-ylabel('Simulated amplitudes'); xlabel('Simulated cycles (Simulated abundance)');
+subplot(2,4,7); imagesc(Figure3B.Signal_Abn, [0 1]); title({'Sine+1/f:'; 'Rhythmic abundance'}); colorbar('location', 'SouthOutside');
+ylabel('Simulated amplitudes'); xlabel({'Simulated cycles';'(Simulated abundance)'});
 set(gca, 'YTick', 1:2:8); set(gca, 'XTick', 1:2:8); set(gca, 'YTickLabels', Figure3B.Signal_ampSNR(2:2:end)); set(gca, 'XTickLabels', Figure3B.Signal_cycLabel(2:2:end));
-subplot(2,4,8); imagesc(Figure3B.Signal_Ratio, [0 1]); title({'Sine+1/f:'; 'Ratio of overall to rhythmic amplitude'}); colorbar;
-ylabel('Simulated amplitudes'); xlabel('Simulated cycles (Simulated abundance)');
+subplot(2,4,8); imagesc(Figure3B.Signal_Ratio, [0 1]); title({'Sine+1/f:'; 'Ratio: overall/rhythmic'}); colorbar('location', 'SouthOutside');
+ylabel('Simulated amplitudes'); xlabel({'Simulated cycles';'(Simulated abundance)'});
 set(gca, 'YTick', 1:2:8); set(gca, 'XTick', 1:2:8); set(gca, 'YTickLabels', Figure3B.Signal_ampSNR(2:2:end)); set(gca, 'XTickLabels', Figure3B.Signal_cycLabel(2:2:end));
 
-set(findall(gcf,'-property','FontSize'),'FontSize',18)
+set(findall(gcf,'-property','FontSize'),'FontSize',19)
+
+% add colorbrewer
+addpath('/Volumes/LNDG/Projects/StateSwitch/dynamic/data/eeg/rest/B_analyses/A_MSE_CSD_multiVariant/T_tools/brewermap')
+cBrew = brewermap(500,'RdBu');
+cBrew = flipud(cBrew);
+colormap(cBrew)
+
+set(gcf,'renderer','opengl');
 
 pn.plotFolder = '/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F_Figures/';
 figureName = 'F3B';

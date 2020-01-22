@@ -85,7 +85,7 @@
 
 %% load Figure data
 
-load('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/S1.mat', 'FigureS1');
+load('/Users/kosciessa/Desktop/eBOSC/figureData/S2.mat', 'FigureS1');
 
 addpath(genpath('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F4_FigureTools/'))
 

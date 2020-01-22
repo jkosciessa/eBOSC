@@ -72,7 +72,7 @@
 
 %% load Figure data
 
-load('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/S5.mat', 'FigureS5')
+load('/Users/kosciessa/Desktop/eBOSC/figureData/S6.mat', 'FigureS5')
 
 %% plot topography of between-subject collinearity
 

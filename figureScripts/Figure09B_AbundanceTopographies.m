@@ -65,18 +65,27 @@
 
 %% load Figure data
 
-load('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/F12B.mat', 'Figure12B')
+load('/Users/kosciessa/Desktop/eBOSC/figureData/F9B.mat', 'Figure12B')
 
 %% plot Abundance topographies
 
 h = figure('units','normalized','position',[.1 .1 .7 .3]);
 for indFreq = 1:numel(Figure12B.FrequencyCategories)
     subplot(1,6,indFreq)
+    Figure12B.cfg.colorbar = 'SouthOutside'
     Figure12B.plotData.powspctrm = squeeze(nanmean(Figure12B.AbundanceByFreq{indFreq},1))';
     ft_topoplotER(Figure12B.cfg,Figure12B.plotData)
     title(Figure12B.FrequencyLabels{indFreq})
+    cb = colorbar('location', Figure12B.cfg.colorbar);
+    set(get(cb,'XLabel'),'String','abundance');
 end
-set(findall(gcf,'-property','FontSize'),'FontSize',18)
+set(findall(gcf,'-property','FontSize'),'FontSize',25)
+
+% change colormap
+addpath('/Volumes/EEG/BOSC_Sternberg/T_tools/brewermap')
+cBrew = brewermap(500,'RdBu');
+cBrew = flipud(cBrew);
+colormap(cBrew)
 
 pn.plotFolder = '/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F_Figures/';
 figureName = 'F12B';

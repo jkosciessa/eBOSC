@@ -82,7 +82,8 @@
 
 %% load Figure data
 
-load('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/F6A.mat', 'Figure6A')
+load('/Users/kosciessa/Desktop/eBOSC/figureData/F5A.mat', 'Figure6A')
+addpath('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F4_FigureTools')
 
 %% plot Figure
 

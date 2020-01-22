@@ -39,7 +39,7 @@
 
 %% load Figure data
 
-load('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/F6C.mat', 'Figure6C')
+load('/Users/kosciessa/Desktop/eBOSC/figureData/F5C.mat', 'Figure6C')
 
 %% FIGURE 3A: Individual abundance stability
 

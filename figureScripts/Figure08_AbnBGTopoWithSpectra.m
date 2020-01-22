@@ -100,13 +100,15 @@
 
 %% load Figure data
 
-load('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/F11.mat', 'Figure11')
+addpath('/Volumes/EEG/BOSC_Sternberg/T_tools/fieldtrip-20180227'); ft_defaults;
+
+load('/Users/kosciessa/Desktop/eBOSC/figureData/F8.mat', 'Figure11')
 
 %% plot average across loads & sessions: power threshold
 
 % average: cond, sess, sub for each Figure11.freq
 
-h = figure('units','normalized','position',[.1 .1 .9 .35]);
+h = figure('units','normalized','position',[.1 .1 .85 .4]);
 
 indFreq = 3; % 8-15 Hz Alpha
 
@@ -117,7 +119,7 @@ subplot(1,4,1);
     title(['Overall ',Figure11.frequencies{indFreq},' amplitude']);
 subplot(1,4,2);
     Figure11.cfg.highlight = 'on';
-    Figure11.cfg.highlightcolor = [0 0 0];
+    Figure11.cfg.highlightcolor = [1 1 1];
     Figure11.cfg.highlightchannel = 'FCz';
     Figure11.cfg.highlightsize = 10;
     Figure11.plotData.powspctrm = squeeze(nanmean(nanmean(nanmean(Figure11.o_BGfit(1:3,indFreq,:,:,:),3),1),5));
@@ -126,28 +128,43 @@ subplot(1,4,2);
 subplot(1,4,3);
     Figure11.cfg.highlight = 'on';
     Figure11.cfg.highlightsize = 10;
-    Figure11.cfg.highlightcolor = [0 0 0];
+    Figure11.cfg.highlightcolor = [1 1 1];
     Figure11.cfg.highlightchannel = 44:60;
     Figure11.plotData.powspctrm = squeeze(nanmean(nanmean(nanmean(Figure11.abn_data(1:3,indFreq,:,:,:),3),1),5));    
     ft_topoplotER(Figure11.cfg,Figure11.plotData)
     title([Figure11.frequencies{indFreq},' abundance']);
-    
+ 
+% add colorbrewer
+addpath('/Volumes/LNDG/Projects/StateSwitch/dynamic/data/eeg/rest/B_analyses/A_MSE_CSD_multiVariant/T_tools/brewermap')
+cBrew = brewermap(500,'RdBu');
+cBrew = flipud(cBrew);
+colormap(cBrew)
+
 %% plot spectra separately for frontal/posterior channels
 
-subplot(1,4,4); hold on;
-plot(squeeze(nanmean(nanmean(Figure11.Thresholds.allLoads_bg_pow(:,21,:),2),1)), 'LineWidth', 4);
-plot(squeeze(nanmean(nanmean(Figure11.Thresholds.allLoads_bg_pow(:,44:60,:),2),1)), 'LineWidth', 4);
+pn.shadedError = ['/Volumes/LNDG/Projects/StateSwitch/dynamic/data/eeg/rest/B_analyses/A_MSE_CSD_multiVariant/T_tools/shadedErrorBar']; addpath(pn.shadedError);
+
+subplot(1,4,4); cla; hold on;
+curAverage = nanmean(Figure11.Thresholds.allLoads_bg_pow(:,21,:),2);
+    standError = nanstd(curAverage,1)./sqrt(size(curAverage,1));
+    l1 = shadedErrorBar([],nanmean(curAverage,1),standError, 'lineprops', {'Color',[.3 .5 .8],'linewidth', 4}, 'patchSaturation', .05);
+curAverage = nanmean(Figure11.Thresholds.allLoads_bg_pow(:,44:60,:),2);
+    standError = nanstd(curAverage,1)./sqrt(size(curAverage,1));
+    l2 = shadedErrorBar([],nanmean(curAverage,1),standError, 'lineprops', {'r','linewidth', 4}, 'patchSaturation', .05);
+
+% plot(squeeze(nanmean(nanmean(Figure11.Thresholds.allLoads_bg_pow(:,21,:),2),1)), 'LineWidth', 4);
+% plot(squeeze(nanmean(nanmean(Figure11.Thresholds.allLoads_bg_pow(:,44:60,:),2),1)), 'LineWidth', 4);
 xlim([1, numel(Figure11.freq)])
-xticks([1:10:numel(Figure11.freq)]); xticklabels(round(Figure11.freq(xticks),1)); xlabel('Frequency')
-legend({'FCz average spectrum'; 'Posterior average spectrum'}); legend('boxoff')
-title('Spectra for labeled channels')
-set(findall(gcf,'-property','FontSize'),'FontSize',16)
+xticks([1:10:numel(Figure11.freq)]); xticklabels(round(Figure11.freq(xticks),1)); xlabel('Frequency [Hz]')
+legend([l1.mainLine, l2.mainLine], {'FCz average spectrum'; 'Posterior average spectrum'}); legend('boxoff')
+title({'Spectra for labeled channels'; ''})
+set(findall(gcf,'-property','FontSize'),'FontSize',20)
 
-h_sup = suptitle('eBOSC differentiates between frontal 1/f slope and rhythmicity during WM retention');
-set(h_sup, 'FontWeight','bold', 'FontSize', 18);
+h_sup = suptitle('eBOSC differentiates between frontal 1/f slope and posterior rhythmicity during WM retention');
+set(h_sup, 'FontWeight','bold', 'FontSize', 24);
 
-pn.plotFolder = '/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F_Figures/';
-figureName = 'F11';
+pn.plotFolder = '/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/Figures_resubmit1/F1_Figures/';
+figureName = 'F8';
 
 saveas(h, [pn.plotFolder, figureName], 'fig');
 saveas(h, [pn.plotFolder, figureName], 'epsc');

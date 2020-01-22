@@ -136,19 +136,20 @@
 % 
 % %% save Figure data
 % 
-% save('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/F4.mat', 'Figure4')
+% save('/Volumes/EEG/BOSC/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/F4.mat', 'Figure4')
 
 %% load Figure data
 
-load('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/F4.mat', 'Figure4')
+load('/Users/kosciessa/Desktop/eBOSC/figureData/F3.mat', 'Figure4')
 
-addpath(genpath('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F4_FigureTools/'))
+addpath(genpath('/Volumes/EEG/BOSC/BOSC_SternRest/X_documentation/B_2018_Manuscript/F4_FigureTools/'))
 
 %% Figure A
 
 h = figure('units','normalized','position',[0 0 1 1]);
 subplot(3,4,1);
     imagesc(Figure4.A11, [-.2, .2]);
+    %ax = gca; colorData = ax.Children.CData;
     addNumericalValues_Figure(Figure4.A11, Figure4.ampSNR, Figure4.cycLabel)
     title('Abundance Error: Standard BOSC');
 subplot(3,4,2);
@@ -218,50 +219,57 @@ subplot(3,4,3);
     l4 = scatter(Figure4.B1.Sim1_Abn, Figure4.B1.Sim1_eAmp,60, 'MarkerEdgeColor', [1,1,1], 'MarkerFaceColor', Figure4.B.colorm(1,:)); % detected rhythmic amplitudes
     l5 = scatter(Figure4.B1.Sim1_Abn, Figure4.B1.Sim1_eAmp-Figure4.B1.Sim1_fitBG,60, 'MarkerEdgeColor', [1,1,1], 'MarkerFaceColor', Figure4.B.colorm(2,:)); % detected rhythmic amplitude-BG
     ylabel('Empirical Amplitude [a.u.]'); xlabel('Empirical Abundance');
-    legend([l2, l1, l3], {'simulated data'; ['simulated data',char(10),'(interpolated abundance)']; 'overall estimate'}, 'Location', 'northwest')
-    legend('boxoff')
     title({'Simulated vs. empirical amplitudes';'Simulated Abundance: 1'});
     line([1 1], [0, 150], 'Color','k', 'LineWidth', 2) % add simulated abundance
     ylim([25 150])
+    legend([l2, l1, l3], {'simulated data'; ['simulated data',char(10),'(interpolated abundance)']; 'overall estimate'}, 'Location', 'northwest')
+    legend('boxoff')
     
 % fit to lower simulated abundance
 
-subplot(3,4,4);
+subplot(3,4,4); cla;
     l1 = scatter(Figure4.B2.Sim25_Abn, Figure4.B2.Sim25_simAmp,60,'MarkerEdgeColor', [1,1,1], 'MarkerFaceColor', [0,0,0]); hold on; % simulated amplitudes
     l2 = scatter(Figure4.B2.Sim25_Abn_noBG, Figure4.B2.Sim25_simAmp,60,'MarkerEdgeColor', [1,1,1], 'MarkerFaceColor', [.5 .5 .5 ]); hold on; % simulated amplitudes
     l3 = scatter(Figure4.B2.Sim25_Abn, Figure4.B2.Sim25_oAmp,60,'MarkerEdgeColor', [1,1,1], 'MarkerFaceColor', Figure4.B.colorm(4,:)); hold on; % overall amplitudes
     l4 = scatter(Figure4.B2.Sim25_Abn, Figure4.B2.Sim25_eAmp,60, 'MarkerEdgeColor', [1,1,1], 'MarkerFaceColor', Figure4.B.colorm(1,:)); % detected rhythmic amplitudes
     l5 = scatter(Figure4.B2.Sim25_Abn, Figure4.B2.Sim25_eAmp-Figure4.B2.Sim25_fitBG,60, 'MarkerEdgeColor', [1,1,1], 'MarkerFaceColor', Figure4.B.colorm(2,:)); % detected rhythmic amplitude-BG
     ylabel('Empirical Amplitude [a.u.]'); xlabel('Empirical Abundance');
-    legend([l4, l5], {'rhythmic estimate'; ['rhythmic estimate' char(10) 'excl. background']}, 'Location', 'northwest')
-    legend('boxoff')
     title({'Simulated vs. empirical amplitudes';'Simulated Abundance: .25'});
     line([.25 .25], [0, 150], 'Color','k', 'LineWidth', 2) % add simulated abundance 
     ylim([25 150])
+    legend([l4, l5], {'rhythmic estimate'; ['rhythmic estimate' char(10) 'excl. background']}, 'Location', 'northwest')
+    legend('boxoff')
     
-set(findall(gcf,'-property','FontSize'),'FontSize',14)
+set(findall(gcf,'-property','FontSize'),'FontSize',20)
 
+subplot(3,4,1); set(gca, 'XTick', 1:8); set(findall(gca,'-property','FontSize'),'FontSize',17); set(gca, 'FontSize', 20);
+subplot(3,4,2); set(gca, 'XTick', 1:8); set(findall(gca,'-property','FontSize'),'FontSize',17); set(gca, 'FontSize', 20);
+subplot(3,4,5); set(gca, 'XTick', 1:8); set(findall(gca,'-property','FontSize'),'FontSize',17); set(gca, 'FontSize', 20);
+subplot(3,4,6); set(gca, 'XTick', 1:8); set(findall(gca,'-property','FontSize'),'FontSize',17); set(gca, 'FontSize', 20);
+subplot(3,4,9); set(gca, 'XTick', 1:8); set(findall(gca,'-property','FontSize'),'FontSize',17); set(gca, 'FontSize', 20);
+subplot(3,4,10); set(gca, 'XTick', 1:8); set(findall(gca,'-property','FontSize'),'FontSize',17); set(gca, 'FontSize', 20);
+subplot(3,4,11); set(gca, 'XTick', 1:8); set(findall(gca,'-property','FontSize'),'FontSize',17); set(gca, 'FontSize', 20);
+subplot(3,4,12); set(gca, 'XTick', 1:8); set(findall(gca,'-property','FontSize'),'FontSize',17); set(gca, 'FontSize', 20);
+
+subplot(3,4,4);
 % add SNR as text
 x = Figure4.B2.SimAbn;
 y = Figure4.B2.SimAmp;
 z = Figure4.B.ampSNR;
 for K = 1:2:numel(x)
-    text(x(K)+.02,y(K),z{K}, 'FontSize', 11)
+    t(K) = text(x(K)+.02,y(K),z{K}, 'FontSize', 14);
 end
 
-subplot(3,4,1); set(gca, 'XTick', 1:8);
-subplot(3,4,2); set(gca, 'XTick', 1:8);
-subplot(3,4,5); set(gca, 'XTick', 1:8);
-subplot(3,4,6); set(gca, 'XTick', 1:8);
-subplot(3,4,9); set(gca, 'XTick', 1:8);
-subplot(3,4,10); set(gca, 'XTick', 1:8);
-subplot(3,4,11); set(gca, 'XTick', 1:8);
-subplot(3,4,12); set(gca, 'XTick', 1:8);
+% change colormap
+addpath('/Volumes/EEG/BOSC_Sternberg/T_tools/brewermap')
+cBrew = brewermap(500,'RdBu');
+cBrew = flipud(cBrew);
+colormap(cBrew)
 
 %% save Figure
 
-pn.plotFolder = '/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F_Figures/';
-figureName = 'F4';
+pn.plotFolder = '/Volumes/EEG/BOSC/BOSC_SternRest/X_documentation/B_2018_Manuscript/Figures_resubmit1/F1_Figures/';
+figureName = 'F3_v2';
 
 saveas(h, [pn.plotFolder, figureName], 'fig');
 saveas(h, [pn.plotFolder, figureName], 'epsc');

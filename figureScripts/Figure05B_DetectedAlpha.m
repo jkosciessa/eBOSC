@@ -78,7 +78,7 @@
 
 %% plot detected vs. non-detected power by trial
 
-load('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/F6B.mat', 'Figure6B')
+load('/Users/kosciessa/Desktop/eBOSC/figureData/F5B.mat', 'Figure6B')
 
 hfig = figure('units','normalized','position',[.1 .1 .7 .7]);
 [ha, pos] = tight_subplot(7,1,[.01 .01],[.005 .005],[.005 .005]);
@@ -142,3 +142,57 @@ saveas(hfig, [pn.plotFolder, 'F2B_v2'], 'epsc');
 saveas(hfig, [pn.plotFolder, 'F2B_v2'], 'fig');
 saveas(hfig, [pn.plotFolder, 'F2B_v2'], 'png');
 %close(hfig);
+
+%% plot lower part of Figure 6
+
+load('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/F6A.mat', 'Figure6A')
+addpath('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F4_FigureTools')
+
+restoredefaultpath
+pn.shadedError = ['/Volumes/EEG/BOSC_Sternberg/T_tools/shadedErrorBar-7002ebc']; addpath(pn.shadedError);
+
+hfig = figure('units','normalized','position',[.1 .1 .7 .2]);
+subplot(1,2,1); 
+    patches.timeVec = [-1.4, -1.2; -.2 0; 3, 3.2];
+    patches.colorVec = [.8 .8 .8; .8 .8 .8; .6 .6 .6];
+    for indP = 1:size(patches.timeVec,1)
+        YLim = [-.25 .5];
+        p = patch([patches.timeVec(indP,1) patches.timeVec(indP,2) patches.timeVec(indP,2) patches.timeVec(indP,1)], ...
+                    [YLim(1) YLim(1)  YLim(2), YLim(2)], patches.colorVec(indP,:));
+        p.EdgeColor = 'none';
+    end; hold on;
+    yyaxis left; set(gca, 'ylim', [-.25 .5]); %plot(Figure6A.timeVec,nanmean(Figure6A.SubAvg.detTF_z,1), 'k', 'LineWidth', 2); %hold on; plot(Figure6A.timeVec,nanmean(SubAvg.z_Power,1), '--k'); 
+    standError = nanstd(Figure6A.SubAvg.detTF_z,1)./sqrt(size(Figure6A.SubAvg.detTF_z,1));
+    l1 = shadedErrorBar(Figure6A.timeVec,nanmean(Figure6A.SubAvg.detTF_z,1),standError, 'lineprops', {'color', [0 0 0],'linewidth', 3}, 'patchSaturation', .05);
+    ylabel({'rhythmic power';'(z-score)'},'FontSize',15);
+    yyaxis right; set(gca, 'ylim', [0 40]); %plot(Figure6A.timeVec,nanmean(Figure6A.SubAvg.det,1)*100,'r', 'LineWidth', 2); 
+    ylabel('% trials rhythmic','FontSize',15, 'Color', 'r'); set(gca, 'YTickLabel', [0 10 20 30 40], 'YColor','r'); xlabel('Time (s)');xlim([Figure6A.timeVec(1),Figure6A.timeVec(end)]);
+    standError = nanstd(Figure6A.SubAvg.det.*100,1)./sqrt(size(Figure6A.SubAvg.det,1));
+    l2 = shadedErrorBar(Figure6A.timeVec,nanmean(Figure6A.SubAvg.det.*100,1),standError, 'lineprops', {'color', [1 0 0],'linewidth', 3}, 'patchSaturation', .05);
+    xlim([-2.4 5])
+    text(.8,10, 'Retention')
+subplot(1,2,2); cla;
+    for indP = 1:size(patches.timeVec,1)
+        YLim = [-.8 .35];
+        p = patch([patches.timeVec(indP,1) patches.timeVec(indP,2) patches.timeVec(indP,2) patches.timeVec(indP,1)], ...
+                    [YLim(1) YLim(1) YLim(2), YLim(2)], patches.colorVec(indP,:));
+        p.EdgeColor = 'none';
+    end; hold on;
+    % add error bars
+    yyaxis left; set(gca, 'ylim', [-.8 .35]);
+    standError = nanstd(Figure6A.SubAvg.undetTF_z,1)./sqrt(size(Figure6A.SubAvg.undetTF_z,1));
+    l3 = shadedErrorBar(Figure6A.timeVec,nanmean(Figure6A.SubAvg.undetTF_z,1),standError, 'lineprops', {'color', [0 0 0],'linewidth', 3}, 'patchSaturation', .05);
+    ylabel({'arrhythmic power';'(z-score)'},'FontSize',15);
+    yyaxis right; set(gca, 'ylim', [0 40]); %plot(Figure6A.timeVec,nanmean(Figure6A.SubAvg.det,1)*100,'r', 'LineWidth', 2); 
+    ylabel('% trials rhythmic','FontSize',15, 'Color', 'r'); set(gca, 'YTickLabel', [0 10 20 30 40], 'YColor','r'); xlabel('Time (s)'); xlim([Figure6A.timeVec(1),Figure6A.timeVec(end)]);
+    standError = nanstd(Figure6A.SubAvg.det.*100,1)./sqrt(size(Figure6A.SubAvg.det,1));
+    l4 = shadedErrorBar(Figure6A.timeVec,nanmean(Figure6A.SubAvg.det.*100,1),standError, 'lineprops', {'color', [1 0 0],'linewidth', 3}, 'patchSaturation', .05);
+    xlim([-2.4 5])
+    text(.8,10, 'Retention')
+set(findall(gcf,'-property','FontSize'),'FontSize',22)
+
+pn.plotFolder = '/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F_Figures/';
+
+saveas(hfig, [pn.plotFolder, 'F6B_lower'], 'epsc');
+saveas(hfig, [pn.plotFolder, 'F6B_lower'], 'fig');
+saveas(hfig, [pn.plotFolder, 'F6B_lower'], 'png');

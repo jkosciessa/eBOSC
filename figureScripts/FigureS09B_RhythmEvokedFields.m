@@ -25,7 +25,7 @@
 % 
 %% load Figure data
 
-load('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/F15B.mat', 'Figure15B');
+load('/Users/kosciessa/Desktop/eBOSC/figureData/S9B.mat', 'Figure15B');
 
 %% plot Figure
 

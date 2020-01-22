@@ -43,7 +43,7 @@
 
 %% load Figure data
 
-load('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/S6.mat', 'FigureS6')
+load('/Users/kosciessa/Desktop/eBOSC/figureData/S3.mat', 'FigureS6')
 
 %% Figure SXX
 

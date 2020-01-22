@@ -174,15 +174,15 @@
 
 %% load Figure data
 
-load('/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F3_FigureData/F2.mat', 'Figure2')
+load('/Users/kosciessa/Desktop/eBOSC/figureData/S1.mat', 'Figure2')
 
 %% plot Figure
 
 h = figure('units','normalized','position',[.1 .1 .7 .7]);
 subplot(3,2,1); plot(Figure2.A.signal, 'k', 'LineWidth', 2); xlim(Figure2.A.time); title('Time domain signal')
-    set(gca, 'XTick', [2400 2600]); set(gca, 'XTickLabel', {'Alpha ON'; 'Alpha OFF'}); ylim([-7 7]); ylabel('Amplitude (a.u.)');
+    set(gca, 'XTick', [2400 2600]); set(gca, 'XTickLabel', {'Alpha ON'; 'Alpha OFF'}); ylim([-7 7]); ylabel({'Time-domain','amplitude (a.u.)'});
 subplot(3,2,2); plot(Figure2.B.signal, 'k', 'LineWidth', 2); xlim(Figure2.B.time); title('Alpha rhythm only')
-    set(gca, 'XTick', [2400 2600]); set(gca, 'XTickLabel', {'Alpha ON'; 'Alpha OFF'}); ylabel('Amplitude (a.u.)');
+    set(gca, 'XTick', [2400 2600]); set(gca, 'XTickLabel', {'Alpha ON'; 'Alpha OFF'}); ylabel({'Time-domain','amplitude (a.u.)'});
 subplot(3,2,3); imagesc(Figure2.C.detected); xlim([1850 2200]); title('BOSC detected matrix'); xlabel('Time'); ylabel('Frequency [Hz]')
     set(gca, 'YTick', [10 20 30]); set(gca, 'YTickLabel', round(Figure2.C.freq([10 20 30])));
     set(gca, 'XTick', [1900 2100]); set(gca, 'XTickLabel', {'Alpha ON'; 'Alpha OFF'});
@@ -196,20 +196,21 @@ subplot(3,2,5); hold on;
     plot(Figure2.E.time, Figure2.E.traceBlack, 'k'); hold on; plot(Figure2.E.time, Figure2.E.traceRed, 'r');
     xlim([1850 2200])
     title('Temporal Convolution Correction')
-    ylabel('Amplitude [a.u.]')
+    ylabel({'Frequency-domain','rhythmic amplitude [a.u.]'})
     set(gca, 'XTick', [1900 2100]); set(gca, 'XTickLabel', {'Alpha ON'; 'Alpha OFF'});
 subplot(3,2,6); hold on;
     plot(Figure2.F.traceRedX, Figure2.F.traceRedY, 'r', 'LineWidth', 10)
     plot(Figure2.F.traceBlackX, Figure2.F.traceBlackY, 'k', 'LineWidth', 10)
     xlim([1850 2200])
     title('Final Episode Output')
-    ylabel('Amplitude [a.u.]')
+    ylabel({'Frequency-domain',' rhythmic amplitude [a.u.]'})
     set(gca, 'XTick', [1900 2100]); set(gca, 'XTickLabel', {'Alpha ON'; 'Alpha OFF'});
 set(findall(gcf,'-property','FontSize'),'FontSize',18)
 
-pn.plotFolder = '/Volumes/EEG/BOSC_SternRest/X_documentation/B_2018_Manuscript/F_Figures/';
+pn.plotFolder = '/Volumes/fb-lip/BOSC_SternRest/X_documentation/B_2018_Manuscript/F_Figures/';
 figureName = 'F2';
 
 saveas(h, [pn.plotFolder, figureName], 'fig');
 saveas(h, [pn.plotFolder, figureName], 'epsc');
 saveas(h, [pn.plotFolder, figureName], 'png');
+saveas(h, [pn.plotFolder, figureName], 'pdf');
