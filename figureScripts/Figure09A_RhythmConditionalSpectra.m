@@ -62,7 +62,7 @@
 
 load('/Users/kosciessa/Desktop/eBOSC/figureData/F9A.mat', 'Figure12A')
 
-pn.shadedError = ['/Volumes/EEG/BOSC_Sternberg/T_tools/shadedErrorBar-7002ebc']; addpath(pn.shadedError);
+pn.shadedError = ['/Volumes/EEG/BOSC/BOSC_Sternberg/T_tools/shadedErrorBar-7002ebc']; addpath(pn.shadedError);
 
 %% Plot rhythm-conditional deviance spectra
 
