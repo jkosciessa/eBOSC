@@ -20,4 +20,4 @@ Whitten, T. A., Hughes, A. M., Dickson, C. T., & Caplan, J. B. (2011). A better 
 
 --------- Additional information -----------
 
-The scripts producing the simulation files as well as the relevant supplementary plots in the paper can be found in the subdirectory 'simulations'. Note that only the scripts are provided and the paths still need to be adjusted. This is currently still work-in-progress.
+Simulation scripts and data files regarding the 2020 NeuroImage paper can be found at https://github.com/jkosciessa/eBOSC_resources_NI2020.
