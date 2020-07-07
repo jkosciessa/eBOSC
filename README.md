@@ -14,10 +14,10 @@ The eBOSC library is distributed in the hope that it will be useful, but WITHOUT
 
 If you find the method useful, please cite the following papers:
 
-Kosciessa, J. Q., Grandy, T. H., Garrett, D. D., & Werkle-Bergner, M. (2019). Single-trial characterization of neural rhythms: Potential and challenges. Neuroimage, 116331. doi:https://doi.org/10.1016/j.neuroimage.2019.116331
+Kosciessa, J. Q., Grandy, T. H., Garrett, D. D., & Werkle-Bergner, M. (2020). Single-trial characterization of neural rhythms: Potential and challenges. NeuroImage, 206, 116331. doi:10.1016/j.neuroimage.2019.116331
 
 Whitten, T. A., Hughes, A. M., Dickson, C. T., & Caplan, J. B. (2011). A better oscillation detection method robustly extracts EEG rhythms across brain state changes: The human alpha rhythm as a test case. NeuroImage, 54(2), 860–874. http://doi.org/10.1016/j.neuroimage.2010.08.064
 
---------- Simulation files -----------
+--------- Additional information -----------
 
 The scripts producing the simulation files as well as the relevant supplementary plots in the paper can be found in the subdirectory 'simulations'. Note that only the scripts are provided and the paths still need to be adjusted. This is currently still work-in-progress.
