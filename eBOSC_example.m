@@ -16,27 +16,32 @@ addpath([pn.eBOSC, 'external/BOSC/']);
 addpath([pn.eBOSC, 'external/fieldtrip/']); ft_defaults;
 addpath([pn.eBOSC, 'external/NoiseTools/']);
 
-%%  BOSC parameters
+%%  eBOSC parameters
 
+% general setup
 cfg.eBOSC.F                 = 2.^[1:.125:6];                            % frequency sampling (~Whitten et al., 2011), but higher frequency resolution
 cfg.eBOSC.wavenumber        = 6;                                        % wavelet family parameter (time-frequency tradeoff) [recommended: ~6]
-cfg.eBOSC.ncyc              = repmat(3, 1, numel(cfg.eBOSC.F));         % vector of duration thresholds at each frequency
-cfg.eBOSC.percentile        = .95;                                      % percentile of background fit for power threshold
 cfg.eBOSC.fsample           = 500;                                      % current sampling frequency of EEG data
 cfg.eBOSC.WLpadding         = 500;                                      % padding to avoid edge artifacts due to WL [SPs]
 cfg.eBOSC.detectedPad       = 250;                                      % 'shoulder' for BOSC detected matrix to account for duration threshold
 cfg.eBOSC.trialPad          = 750;                                      % complete padding (WL + shoulder)
 cfg.eBOSC.BGpad             = 750;                                      % padding of segments for BG (only avoiding edge artifacts)
-cfg.eBOSC.fstp              = 1;
+cfg.eBOSC.waveseg           = [0 9];                                    % include +-3s around stim processing; 3 seconds will be cut at each end during detection --> 3 to 6 (stim only)
+
+% threshold settings
+cfg.eBOSC.ncyc              = repmat(3, 1, numel(cfg.eBOSC.F));         % vector of duration thresholds at each frequency
+cfg.eBOSC.percentile        = .95;                                      % percentile of background fit for power threshold
 cfg.eBOSC.LowFreqExcludeBG  = 8;                                        % lower bound of bandpass to be excluded prior to background fit
 cfg.eBOSC.HighFreqExcludeBG = 15;                                       % higher bound of bandpass to be excluded prior to background fit
-cfg.eBOSC.waveseg           = [0 9];                                    % include +-3s around stim processing; 3 seconds will be cut at each end during detection --> 3 to 6 (stim only)
+
+% episode creation
+cfg.eBOSC.fstp              = 1;
+
+% episode post-processing
 cfg.eBOSC.postproc.use      = 'yes';                                    % Post-processing of rhythmic episodes, i.e., wavelet 'deconvolution' (default = 'no')
-cfg.eBOSC.postproc.method   = 'MaxBias';                                % Deconvolution method (default = 'MaxBias', FWHM: 'FH')
+cfg.eBOSC.postproc.method   = 'MaxBias';                                % Deconvolution method (default = 'MaxBias', FWHM: 'FWHM')
 cfg.eBOSC.postproc.edgeOnly = 'no';                                     % Deconvolution only at on- and offsets of episodes? (default = 'yes')
 cfg.eBOSC.postproc.effSignal= 'PT';                                     % Amplitude deconvolution on whole signal or signal above power threshold? (default = 'PT')
-
-eBOSC = [];
 
 %% load data
 
@@ -48,6 +53,8 @@ load([pn.eBOSC,  'util/1160_rest_EEG_Rlm_Fhl_rdSeg_Art_EC.mat'], 'data')
 data.trial{1} = cat(2,data.trial{:}); data.trial(2:end) = [];
 data.time{1} = cat(2,data.time{:}); data.time(2:end) = [];
 data = rmfield(data, 'sampleinfo');
+
+eBOSC = [];
 
 eBOSC.inputTime = data.time{1,1};
 eBOSC.detectedTime = eBOSC.inputTime(cfg.eBOSC.WLpadding+1:end-cfg.eBOSC.WLpadding);
@@ -158,8 +165,6 @@ for indTrial = 1:info.Ntrial
     eBOSC.origData(e,:) = origData;
 
     % Supplementary Plot: plot only rhythmic episodes
-    % for a great example see e.g., Trial 1
-
     figure; hold on; 
     plot(eBOSC.origData(e,:));
     tmpDetected = eBOSC.detectedAlpha; tmpDetected(tmpDetected==0) = NaN;
@@ -177,7 +182,7 @@ for indTrial = 1:info.Ntrial
     % -----------------------------
 
     episodes = [];
-    [detected1,episodes] = eBOSC_createEpisodes(squeeze(TFR_),detected, cfg);
+    [detected1,episodes] = eBOSC_episode_create(squeeze(TFR_),detected, cfg);
 
     % encode abundance of episodes (optional)
     eBOSC.abundance_ep(a,c,k,:) = mean(detected1(:,cfg.eBOSC.detectedPad+1:end-cfg.eBOSC.detectedPad),2);

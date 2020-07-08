@@ -124,13 +124,13 @@ while sum(sum(detected1)) > 0
         episodes{j,3} = single(avg_frq);
         episodes{j,4} = single(length(y) ./ cfg.eBOSC.fsample);
         for l = 1:length(y)
-            detected1(x(l),y(l))                   = 0;
+            detected1(x(l),y(l)) = 0;
             detected_new(episodes{j,1}(l,1),episodes{j,1}(l,2)) = 1;
         end
         j = j + 1;
     else
         for l = 1:length(y)
-            detected1(x(l),y(l))                   = 0;
+            detected1(x(l),y(l)) = 0;
         end        
     end
     % clear variables
@@ -144,7 +144,7 @@ end
 %%  Exclude temporal amplitude "leakage" due to wavelet smearing
 
 if strcmp(cfg.eBOSC.postproc.use, 'yes')
-    if strcmp(cfg.eBOSC.postproc.method, 'HM') % FWHM correction
+    if strcmp(cfg.eBOSC.postproc.method, 'FWHM')
         [episodes, detected_new] = eBOSC_episode_postproc_fwhm(episodes,cfg, TFR);
     elseif strcmp(cfg.eBOSC.postproc.method,'MaxBias')
         [episodes, detected_new] = eBOSC_episode_postproc_maxbias(episodes,cfg, TFR);
