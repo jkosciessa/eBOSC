@@ -47,39 +47,38 @@ cfg.eBOSC.postproc.effSignal= 'PT';                                     % Amplit
 
 load([pn.eBOSC,  'util/1160_rest_EEG_Rlm_Fhl_rdSeg_Art_EC.mat'], 'data')
 
-% concatenate trials: check whether this is reasonable, as it introduces
-% hard cuts
+%% concatenate trials for resting state here
+% TO DO: check whether this is reasonable, as it introduces hard cuts
 
 data.trial{1} = cat(2,data.trial{:}); data.trial(2:end) = [];
 data.time{1} = cat(2,data.time{:}); data.time(2:end) = [];
 data = rmfield(data, 'sampleinfo');
 
-eBOSC = [];
-
-eBOSC.inputTime = data.time{1,1};
-eBOSC.detectedTime = eBOSC.inputTime(cfg.eBOSC.WLpadding+1:end-cfg.eBOSC.WLpadding);
-eBOSC.finalTime = eBOSC.inputTime(cfg.eBOSC.trialPad+1:end-cfg.eBOSC.trialPad);
-
 %% ---- select a channel here
 
 e = 60;
+display(['channel #' num2str(e)])
+
+%% TO DO: include the following in 'dedicated' eBOSC function
+
+% initialize eBOSC output structure
+
+eBOSC = [];
 
 % -----------------------------
 % TO DO: include fieldtrip-style automatic detection of dimord
 % -----------------------------
 
-%% oscillation detection 
+eBOSC.inputTime = data.time{1,1};
+eBOSC.detectedTime = eBOSC.inputTime(cfg.eBOSC.WLpadding+1:end-cfg.eBOSC.WLpadding);
+eBOSC.finalTime = eBOSC.inputTime(cfg.eBOSC.trialPad+1:end-cfg.eBOSC.trialPad);
 
-% display progress
-display(['channel #' num2str(e)])
-tic
+%% TF analysis for whole signal to prepare background fit
 
-%%  TF analysis for whole signal to prepare background fit
-
-info.Ntrial = length(data.trial);
+eBOSC.Ntrial = length(data.trial);
 
 TFR = [];
-for indTrial = 1:info.Ntrial
+for indTrial = 1:eBOSC.Ntrial
     % get data
     tmp_dat = data.trial{indTrial}(e,:);
     % wavelet transform (NOTE: no check to avoid spectral leakage);
@@ -92,7 +91,7 @@ end; clear indTrial
 
 % average power estimates across periods of interest
 BG = [];
-for indTrial = 1:info.Ntrial
+for indTrial = 1:eBOSC.Ntrial
     % remove BGpad at beginning and end to avoid edge artifacts
     BG = [BG TFR.trial{indTrial}(:,cfg.eBOSC.BGpad+1:end-cfg.eBOSC.BGpad)];
 end; clear indTrial
@@ -117,21 +116,21 @@ mp = 10.^(polyval(pv,log10(cfg.eBOSC.F)));
 
 % save multiple time-invariant estimates that could be of interest:
 % overall wavelet power spectrum (NOT only background)
-BGinfo.all.(['bg_pow'])(e,:)        = mean(BG(:,cfg.eBOSC.trialPad+1:end-cfg.eBOSC.trialPad),2);
+eBOSC.static.bg_pow(e,:)        = mean(BG(:,cfg.eBOSC.trialPad+1:end-cfg.eBOSC.trialPad),2);
 % log10-transformed wavelet power spectrum (NOT only background)
-BGinfo.all.(['bg_log10_pow'])(e,:)  = mean(log10(BG(:,cfg.eBOSC.trialPad+1:end-cfg.eBOSC.trialPad)),2);
+eBOSC.static.bg_log10_pow(e,:)  = mean(log10(BG(:,cfg.eBOSC.trialPad+1:end-cfg.eBOSC.trialPad)),2);
 % intercept and slope parameters of the robust linear 1/f fit (log-log)
-BGinfo.all.(['pv'])(e,:)            = pv;
+eBOSC.static.pv(e,:)            = pv;
 % linear background power at each estimated frequency
-BGinfo.all.(['mp'])(e,:)            = mp;
+eBOSC.static.mp(e,:)            = mp;
 % statistical power threshold
-BGinfo.all.(['pt'])(e,:)            = pt;
+eBOSC.static.pt(e,:)            = pt;
 
 %% TO DO: implement IRASA for background estimation
 
 %% use statically-defined threshold for single-trial detection
 
-for indTrial = 1:info.Ntrial
+for indTrial = 1:eBOSC.Ntrial
 
     % initialize variables
     eBOSC.pepisode{1,indTrial}(e,:)  = zeros(1,size(cfg.eBOSC.F,2));
