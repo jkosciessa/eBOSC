@@ -1,4 +1,4 @@
-function [episodes_new] = eBOSC_episode_postproc_fwhm(episodes,cfg, B)
+function [episodes_new, detected_new] = eBOSC_episode_postproc_fwhm(episodes,cfg, B)
 
 if ~isempty(episodes)
             
