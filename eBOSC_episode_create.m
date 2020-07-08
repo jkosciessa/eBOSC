@@ -173,7 +173,7 @@ while sum(sum(detected1)) > 0
         episodes{j,4} = single(length(y) ./ cfg.eBOSC.fsample);
         for l = 1:length(y)
             detected1(x(l),y(l))                   = 0;
-            detected2(episodes{j,1}(l,1),episodes{j,1}(l,2)) = 1;
+            detected_new(episodes{j,1}(l,1),episodes{j,1}(l,2)) = 1;
         end
         j = j + 1;
     else
@@ -185,7 +185,7 @@ while sum(sum(detected1)) > 0
     clear k x y chck tmp avg_frq num_pnt m
 end
 
-if sum(sum(detected2)) == 0
+if sum(sum(detected_new)) == 0
     episodes = {};
 end
 
@@ -198,6 +198,9 @@ if strcmp(cfg.eBOSC.BiasCorrection, 'yes')
         [episodes, detected_new] = eBOSC_episode_postproc_maxbias(episodes,cfg, B);
     end
 else
-    % Transfer new detected structure
-    detected_new = detected2;
+    
+%% remove episodes and part of episodes that fall into 'shoulder'
+
+[episodes] = eBOSC_episode_rm_shoulder(cfg,detected_new,episodes);
+
 end
