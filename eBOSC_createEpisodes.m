@@ -53,12 +53,21 @@ function [detected_new,episodes] = eBOSC_createEpisodes(B,detected,cfg)
 %                          {n,1} = episode indices
 %                          {n,2} = average frequency
 %                          {n,3} = episode length (in sec)
+
+episodes_new{cnt,1} = episodes{e,1}(ind_epsd(i,1):ind_epsd(i,2),:);
+episodes_new{cnt,2} = episodes{e,2}(ind_epsd(i,1):ind_epsd(i,2),:);
+episodes_new{cnt,3} = single(avg_frq);
+episodes_new{cnt,4} = single(size(tmp,1) ./ cfg.eBOSC.fsample);
+episodes_new{cnt,5} = episodes{e,1};
+episodes_new{cnt,6} = episodes{e,2};
+episodes_new{cnt,7} = episodes{e,3};
+episodes_new{cnt,8} = episodes{e,4};
 % 
 
 %% Accounting for the frequency spread of the wavelet
 
 
-% Here, we compute the bandpass response as give by the wavelet
+% Here, we compute the bandpass response as given by the wavelet
 % formula and apply half of the BP repsonse on top of the center frequency.
 % Because of log-scaling, the widths are not the same on both sides.
 
@@ -298,21 +307,13 @@ if strcmp(cfg.eBOSC.BiasCorrection, 'yes')
                     num_pnt = floor((cfg.eBOSC.fsample ./ avg_frq) .* (cfg.eBOSC.ncyc(indF))); clear indF;
                     
                     if num_pnt <= size(tmp,1)
-
                         episodes_new{cnt,1} = episodes{e,1}(ind_epsd(i,1):ind_epsd(i,2),:);
                         episodes_new{cnt,2} = episodes{e,2}(ind_epsd(i,1):ind_epsd(i,2),:);
                         episodes_new{cnt,3} = single(avg_frq);
                         episodes_new{cnt,4} = single(size(tmp,1) ./ cfg.eBOSC.fsample);
-
-                        episodes_new{cnt,5} = episodes{e,1};
-                        episodes_new{cnt,6} = episodes{e,2};
-                        episodes_new{cnt,7} = episodes{e,3};
-                        episodes_new{cnt,8} = episodes{e,4};
-                        
                         for l = 1:size(tmp,1)
                             detected_new(episodes_new{cnt,1}(l,1),episodes_new{cnt,1}(l,2)) = 1;
                         end; clear l
-
                         % set counter
                         cnt = cnt + 1;
                     end
@@ -357,26 +358,19 @@ if strcmp(cfg.eBOSC.BiasCorrection, 'yes')
         B_bias = zeros(length(cfg.eBOSC.F),numel(cfg.eBOSC.F),2*cfg.eBOSC.npnts+1);
 
         for f = 1:length(cfg.eBOSC.F)
-
             % temporary time vector and signal
             time = 1/cfg.eBOSC.fsample:1/cfg.eBOSC.fsample:(1/cfg.eBOSC.F(f));
             tmp_sig = cos(time*2*pi*cfg.eBOSC.F(f)).*-1+1;
-
             % signal for time-frequency analysis
             signal = [zeros(1,cfg.eBOSC.npnts) tmp_sig zeros(1,cfg.eBOSC.npnts)];
-            
             tmp_bias_mat = BOSC_tf(signal,cfg.eBOSC.F,cfg.eBOSC.fsample,cfg.eBOSC.wavenumber);
-                        
             % bias matrix
             B_bias(f,:,1:cfg.eBOSC.npnts+1)   = tmp_bias_mat(:,1:cfg.eBOSC.npnts+1);
             B_bias(f,:,cfg.eBOSC.npnts+1:end) = fliplr(tmp_bias_mat(:,1:cfg.eBOSC.npnts+1));
-
             % maximum amplitude
             amp_max(f,:) = max(squeeze(B_bias(f,:,:)),[],2);
-            
             % clear variables
             clear B_tmp ind_* signal time tmp_sig
-
         end; clear f
 
         % midpoint index
@@ -455,11 +449,7 @@ if strcmp(cfg.eBOSC.BiasCorrection, 'yes')
                     episodes_new{cnt,1} = episodes{e,1}(ind_epsd(i,1):ind_epsd(i,2),:);
                     episodes_new{cnt,2} = episodes{e,2}(ind_epsd(i,1):ind_epsd(i,2),:);
                     episodes_new{cnt,3} = single(avg_frq);
-                    episodes_new{cnt,4} = single(size(tmp,1) ./ cfg.eBOSC.fsample);
-                    episodes_new{cnt,5} = episodes{e,1};
-                    episodes_new{cnt,6} = episodes{e,2};
-                    episodes_new{cnt,7} = episodes{e,3};
-                    episodes_new{cnt,8} = episodes{e,4};           
+                    episodes_new{cnt,4} = single(size(tmp,1) ./ cfg.eBOSC.fsample);        
                     for l = 1:size(tmp,1)
                         detected_new(episodes_new{cnt,1}(l,1),episodes_new{cnt,1}(l,2)) = 1;
                     end; clear l
