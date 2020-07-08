@@ -15,7 +15,7 @@
 %
 %    Copyright 2018 Julian Q. Kosciessa, Thomas H. Grandy, Douglas D. Garrett & Markus Werkle-Bergner.
 
-function [detected_new,episodes] = eBOSC_episodes_create(B,detected,cfg)
+function [detected_new,episodes] = eBOSC_episode_create(B,detected,cfg)
 
 % This function creates continuous rhythmic "episodes" and attempts to control for the impact of wavelet parameters.
 %  Time-frequency points that best represent neural rhythms are identified by
