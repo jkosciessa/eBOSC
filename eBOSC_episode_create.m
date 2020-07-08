@@ -76,8 +76,6 @@ tmp_B1(:,1)   = 0;
 tmp_B1(:,end) = 0;
 detected_new     = zeros(size(detected));
 
-episodesTable = table;
-
 % segment counter
 j = 1;
 
@@ -118,22 +116,6 @@ while sum(sum(detected1)) > 0
     num_pnt = floor((cfg.eBOSC.fsample ./ avg_frq) .* (cfg.eBOSC.ncyc(indF))); clear indF;
     
     if length(y) >= num_pnt
-                
-%         epData = [];
-%         epData.col = single(x'-cfg.eBOSC.fstp);
-%         epData.row = single(y'-cfg.eBOSC.fstp);
-%         epData.freq = single(cfg.eBOSC.F(epData.col));
-%         epData.freqMean = single(avg_frq);
-%         epData.amp = single(TFR(sub2ind(size(TFR),epData.col,epData.row)));
-%         epData.durS = single(length(y) ./ cfg.eBOSC.fsample);
-%         epData.durC = epData.durS*epData.freqMean;
-%         
-%         % TO DO: calculate SNR
-%         epData.SNR = 1;
-%         epData.trial = 1;
-%         epData.chan = 1;
-%         epData.onset = 1; % get onset in absolute time
-%         epData.offset = 1; % get offset in relative time
 
         epData.col(j) = {single(x'-cfg.eBOSC.fstp)};
         epData.row(j) = {single(y'-cfg.eBOSC.fstp)};
@@ -150,28 +132,7 @@ while sum(sum(detected1)) > 0
         epData.chan(j) = 1;
         epData.onset(j) = 1; % get onset in absolute time
         epData.offset(j) = 1; % get offset in relative time
-
-%         episodes{j,1}(:,1) = epData.col;
-%         episodes{j,1}(:,2) = epData.row;
-%         episodes{j,2}(:,1) = epData.freq;
-%         episodes{j,2}(:,2) = epData.amp;
-%         episodes{j,3} = single(avg_frq);
-%         episodes{j,4} = epData.freqMean;
-        
-%         episodesTable.Trial(j) = epData.trial;
-%         episodesTable.Channel(j) = epData.chan;
-%         episodesTable.FrequencyMean(j) = epData.freqMean;
-%         episodesTable.DurationS(j) = epData.durS;
-%         episodesTable.DurationC(j) = epData.durC;
-%         episodesTable.AmplitudeMean(j) = nanmean(epData.amp);
-%         episodesTable.Onset(j) = epData.onset;
-%         episodesTable.Offset(j) = epData.offset;
-%         episodesTable.Amplitude(j) = {epData.amp};
-%         episodesTable.Frequency(j) = {epData.freq};
-%         % encode full data below? large table result
-%         episodesTable.ColID(j) = {epData.col'};
-%         episodesTable.RowID(j) = {epData.row'};
-%         
+         
         for l = 1:length(y)
             detected1(x(l),y(l)) = 0;
             detected_new(epData.col{j}(l),epData.row{j}(l)) = 1;
