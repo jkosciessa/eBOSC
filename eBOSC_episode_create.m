@@ -76,6 +76,8 @@ tmp_B1(:,1)   = 0;
 tmp_B1(:,end) = 0;
 detected_new     = zeros(size(detected));
 
+episodesTable = table;
+
 % segment counter
 j = 1;
 
@@ -116,17 +118,65 @@ while sum(sum(detected1)) > 0
     num_pnt = floor((cfg.eBOSC.fsample ./ avg_frq) .* (cfg.eBOSC.ncyc(indF))); clear indF;
     
     if length(y) >= num_pnt
-        episodes{j,1} = single([x'-cfg.eBOSC.fstp,y'-cfg.eBOSC.fstp]);
-        for m = 1:length(y)
-            episodes{j,2}(m,1) = single(cfg.eBOSC.F(episodes{j,1}(m,1)));
-            episodes{j,2}(m,2) = single(TFR(episodes{j,1}(m,1),episodes{j,1}(m,2)));
-        end
-        episodes{j,3} = single(avg_frq);
-        episodes{j,4} = single(length(y) ./ cfg.eBOSC.fsample);
+                
+%         epData = [];
+%         epData.col = single(x'-cfg.eBOSC.fstp);
+%         epData.row = single(y'-cfg.eBOSC.fstp);
+%         epData.freq = single(cfg.eBOSC.F(epData.col));
+%         epData.freqMean = single(avg_frq);
+%         epData.amp = single(TFR(sub2ind(size(TFR),epData.col,epData.row)));
+%         epData.durS = single(length(y) ./ cfg.eBOSC.fsample);
+%         epData.durC = epData.durS*epData.freqMean;
+%         
+%         % TO DO: calculate SNR
+%         epData.SNR = 1;
+%         epData.trial = 1;
+%         epData.chan = 1;
+%         epData.onset = 1; % get onset in absolute time
+%         epData.offset = 1; % get offset in relative time
+
+        epData.col(j) = {single(x'-cfg.eBOSC.fstp)};
+        epData.row(j) = {single(y'-cfg.eBOSC.fstp)};
+        epData.freq(j) = {single(cfg.eBOSC.F(epData.col{j}))};
+        epData.freqMean(j) = single(avg_frq);
+        epData.amp(j) = {single(TFR(sub2ind(size(TFR),epData.col{j},epData.row{j})))};
+        epData.ampMean(j) = nanmean(epData.amp{j});
+        epData.durS(j) = single(length(y) ./ cfg.eBOSC.fsample);
+        epData.durC(j) = epData.durS(j)*epData.freqMean(j);
+        
+        % TO DO: calculate SNR
+        epData.SNR(j) = 1;
+        epData.trial(j) = 1;
+        epData.chan(j) = 1;
+        epData.onset(j) = 1; % get onset in absolute time
+        epData.offset(j) = 1; % get offset in relative time
+
+%         episodes{j,1}(:,1) = epData.col;
+%         episodes{j,1}(:,2) = epData.row;
+%         episodes{j,2}(:,1) = epData.freq;
+%         episodes{j,2}(:,2) = epData.amp;
+%         episodes{j,3} = single(avg_frq);
+%         episodes{j,4} = epData.freqMean;
+        
+%         episodesTable.Trial(j) = epData.trial;
+%         episodesTable.Channel(j) = epData.chan;
+%         episodesTable.FrequencyMean(j) = epData.freqMean;
+%         episodesTable.DurationS(j) = epData.durS;
+%         episodesTable.DurationC(j) = epData.durC;
+%         episodesTable.AmplitudeMean(j) = nanmean(epData.amp);
+%         episodesTable.Onset(j) = epData.onset;
+%         episodesTable.Offset(j) = epData.offset;
+%         episodesTable.Amplitude(j) = {epData.amp};
+%         episodesTable.Frequency(j) = {epData.freq};
+%         % encode full data below? large table result
+%         episodesTable.ColID(j) = {epData.col'};
+%         episodesTable.RowID(j) = {epData.row'};
+%         
         for l = 1:length(y)
             detected1(x(l),y(l)) = 0;
-            detected_new(episodes{j,1}(l,1),episodes{j,1}(l,2)) = 1;
+            detected_new(epData.col{j}(l),epData.row{j}(l)) = 1;
         end
+        
         j = j + 1;
     else
         for l = 1:length(y)
@@ -137,6 +187,9 @@ while sum(sum(detected1)) > 0
     clear k x y chck tmp avg_frq num_pnt m
 end
 
+episodesTable = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.col', epData.row',  ...
+            'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'ColID', 'RowID'});
+        
 if sum(sum(detected_new)) == 0
     episodes = {};
 end
