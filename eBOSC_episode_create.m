@@ -121,7 +121,6 @@ detected1(:,end) = 0;
 tmp_B1        = [zeros(cfg.eBOSC.fstp,size(detected,2)); B.*detected; zeros(cfg.eBOSC.fstp,size(detected,2))];
 tmp_B1(:,1)   = 0;
 tmp_B1(:,end) = 0;
-detected2        = zeros(size(detected));
 detected_new     = zeros(size(detected));
 
 % segment counter
