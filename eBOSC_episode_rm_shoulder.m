@@ -24,9 +24,7 @@ function [episodes] = eBOSC_episode_rm_shoulder(cfg,detected1,episodes)
     cnt = 1;
     rmv = [];
     for j = 1:size(episodes,1)
-        % final episodes
         ex = find(episodes{j,1}(:,2) < ind1 | episodes{j,1}(:,2) > ind2);
-        % update episodes
         episodes{j,1}(ex,:) = [];
         episodes{j,1}(:,2) = episodes{j,1}(:,2) - ind1 + 1;
         episodes{j,2}(ex,:) = [];
@@ -36,16 +34,7 @@ function [episodes] = eBOSC_episode_rm_shoulder(cfg,detected1,episodes)
             rmv(cnt,1) = j;
             cnt = cnt + 1;
         end
-        % original episodes
-        ex = find(episodes{j,5}(:,2) < ind1 | episodes{j,5}(:,2) > ind2);
-        % update episodes
-        episodes{j,5}(ex,:) = [];
-        episodes{j,5}(:,2) = episodes{j,5}(:,2) - ind1 + 1;
-        episodes{j,6}(ex,:) = [];
-        episodes{j,7}       = mean(episodes{j,6}(:,1));
-        episodes{j,8}       = size(episodes{j,5},1) / cfg.eBOSC.fsample; clear ex
     end; clear j cnt
     episodes(rmv,:) = []; clear rmv
-
 
 end % function end
