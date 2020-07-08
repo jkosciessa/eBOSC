@@ -15,7 +15,7 @@
 %
 %    Copyright 2018 Julian Q. Kosciessa, Thomas H. Grandy, Douglas D. Garrett & Markus Werkle-Bergner.
 
-function [detected_new,episodes] = eBOSC_episode_create(B,detected,cfg)
+function [detected_new,episodes] = eBOSC_episode_create(TFR,detected,cfg)
 
 % This function creates continuous rhythmic "episodes" and attempts to control for the impact of wavelet parameters.
 %  Time-frequency points that best represent neural rhythms are identified by
@@ -32,9 +32,9 @@ function [detected_new,episodes] = eBOSC_episode_create(B,detected,cfg)
 %  and following time points is tested with the goal to exclude supra-threshold time
 %  points that are due to the wavelet extension in time. 
 %
-%  input:   B        = time-frequency matrix
-%           detected = detected oscillations in B (based on power and duration threshold)
-%           cfg      - .eBOSC.F           = frequency resolution of B (log-scaled!)
+%  input:   TFR        = time-frequency matrix
+%           detected = detected oscillations in TFR (based on power and duration threshold)
+%           cfg      - .eBOSC.F           = frequency resolution of TFR (log-scaled!)
 %                    - .eBOSC.fsample     = sampling frequency
 %                    - .eBOSC.wavenumber  = wavenumber in time-frequency analysis
 %                    - .eBOSC.npnts       = length of data (in data points)
@@ -63,54 +63,7 @@ function [detected_new,episodes] = eBOSC_episode_create(B,detected,cfg)
 % formula and apply half of the BP repsonse on top of the center frequency.
 % Because of log-scaling, the widths are not the same on both sides.
 
-freqWidth = (2/cfg.eBOSC.wavenumber)*cfg.eBOSC.F;
-lowFreq = cfg.eBOSC.F-(freqWidth/2);
-highFreq = cfg.eBOSC.F+(freqWidth/2);
-
-indF_low = [];
-indF_high = [];
-for indF = 1:numel(cfg.eBOSC.F)
-	if ~isempty(find(cfg.eBOSC.F<=lowFreq(indF), 1, 'last'))
-		fmat(indF,1) = find(cfg.eBOSC.F<=lowFreq(indF), 1, 'last')+1; % first freq falling into range
-	else fmat(indF,1) = 1;
-	end
-	if ~isempty(find(cfg.eBOSC.F>=highFreq(indF), 1, 'first'))
-		fmat(indF,3) = find(cfg.eBOSC.F>=highFreq(indF),1, 'first')-1; % last freq falling into range
-	else fmat(indF,3) = numel(cfg.eBOSC.F);
-	end
-end; fmat(:,2) = (1:numel(cfg.eBOSC.F))'; clear indF;
-range = diff(fmat,[],2);
-range = max(range,[],1);
-
-% initialize variables
-% append search space (i.e. range at both ends. first index refers to lower range
-tmp_B    = [zeros(range(1,1),size(B,2)); B.*detected; zeros(range(1,2),size(B,2))];
-%tmp_B    = B.*detected;
-detected = zeros(size(detected));
-
-for f = range(1,1)+1:size(tmp_B,1)-range(1,2) % loop across frequencies. note that indexing respects the appended segments
-
-	r = 1;
-	% encode detected positions at current frequency
-	tmp_det(r,:) = tmp_B(f,:) ~= 0;
-	% encode detected positions within LOWER range where current freq
-	% point is larger
-	for r = 1:range(1,1)
-		tmp_det(r,:) = tmp_B(f,:) ~= 0 & tmp_B(f,:) >= tmp_B(f-r,:);
-	end
-	% encode detected positions within HIGHER range where current freq
-	% point is larger
-	for r = 1:range(1,2)
-		r2 = range(1,1)+r;
-		tmp_det(r2,:) = tmp_B(f,:) ~= 0 & tmp_B(f,:) >= tmp_B(f+r,:);
-	end; clear r r2;
-
-	detected(f,:) = mean(tmp_det,1) == 1;
-
-end; clear f;
-
-% remove padded zeros
-detected = detected(range(1,1)+1:size(tmp_B,1)-range(1,2),:);
+detected = eBOSC_episode_sparsefreq(cfg, detected, TFR);
 
 %%  Create continuous rhythmic episodes
 
@@ -118,7 +71,7 @@ detected = detected(range(1,1)+1:size(tmp_B,1)-range(1,2),:);
 detected1        = [zeros(cfg.eBOSC.fstp,size(detected,2)); detected; zeros(cfg.eBOSC.fstp,size(detected,2))];
 detected1(:,1)   = 0;
 detected1(:,end) = 0;
-tmp_B1        = [zeros(cfg.eBOSC.fstp,size(detected,2)); B.*detected; zeros(cfg.eBOSC.fstp,size(detected,2))];
+tmp_B1        = [zeros(cfg.eBOSC.fstp,size(detected,2)); TFR.*detected; zeros(cfg.eBOSC.fstp,size(detected,2))];
 tmp_B1(:,1)   = 0;
 tmp_B1(:,end) = 0;
 detected_new     = zeros(size(detected));
@@ -166,7 +119,7 @@ while sum(sum(detected1)) > 0
         episodes{j,1} = single([x'-cfg.eBOSC.fstp,y'-cfg.eBOSC.fstp]);
         for m = 1:length(y)
             episodes{j,2}(m,1) = single(cfg.eBOSC.F(episodes{j,1}(m,1)));
-            episodes{j,2}(m,2) = single(B(episodes{j,1}(m,1),episodes{j,1}(m,2)));
+            episodes{j,2}(m,2) = single(TFR(episodes{j,1}(m,1),episodes{j,1}(m,2)));
         end
         episodes{j,3} = single(avg_frq);
         episodes{j,4} = single(length(y) ./ cfg.eBOSC.fsample);
@@ -192,9 +145,9 @@ end
 
 if strcmp(cfg.eBOSC.postproc.use, 'yes')
     if strcmp(cfg.eBOSC.postproc.method, 'HM') % FWHM correction
-        [episodes, detected_new] = eBOSC_episode_postproc_fwhm(episodes,cfg, B);
+        [episodes, detected_new] = eBOSC_episode_postproc_fwhm(episodes,cfg, TFR);
     elseif strcmp(cfg.eBOSC.postproc.method,'MaxBias')
-        [episodes, detected_new] = eBOSC_episode_postproc_maxbias(episodes,cfg, B);
+        [episodes, detected_new] = eBOSC_episode_postproc_maxbias(episodes,cfg, TFR);
     end
 else
     
