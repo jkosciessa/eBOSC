@@ -91,10 +91,8 @@ if ~isempty(episodes)
         ind_epsd(:,2) = find(d_keep == -1)-1;
 
         for i = 1:size(ind_epsd,1)
-
             % temporary frequency & amplitude vector
             tmp = episodes{e,2}(ind_epsd(i,1):ind_epsd(i,2),:);
-
             % check for passing the duration requirement
             % get average frequency
             avg_frq = mean(tmp(:,1));
@@ -102,7 +100,6 @@ if ~isempty(episodes)
             [~, indF] = min(abs(cfg.eBOSC.F-avg_frq));
             % check number of data points to fulfill number of cycles criterion
             num_pnt = floor((cfg.eBOSC.fsample ./ avg_frq) .* (cfg.eBOSC.ncyc(indF))); clear indF;
-
             if num_pnt <= size(tmp,1)
                 episodes_new{cnt,1} = episodes{e,1}(ind_epsd(i,1):ind_epsd(i,2),:);
                 episodes_new{cnt,2} = episodes{e,2}(ind_epsd(i,1):ind_epsd(i,2),:);
