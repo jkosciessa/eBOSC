@@ -32,16 +32,16 @@ if ~isempty(episodes)
                 % create wavelet with center frequency and amplitude at time point
                 st=1./(2*pi*(f_unique/cfg.eBOSC.wavenumber));
                 t=-3.6*st(f):(1/cfg.eBOSC.fsample):3.6*st(f);
-                if strcmp(cfg.eBOSC.effSignal, 'all')
+                if strcmp(cfg.eBOSC.postproc.effSignal, 'all')
                     m{f}=(B(f_ind_unique(f), t_ind(tp)))*exp(-t.^2/(2*st(f)^2)).*exp(1i*2*pi*f_unique(f).*t); % Morlet wavelet with amplitude-power threshold modulation
-                elseif strcmp(cfg.eBOSC.effSignal, 'PT')
+                elseif strcmp(cfg.eBOSC.postproc.effSignal, 'PT')
                     m{f}=(B(f_ind_unique(f), t_ind(tp))-cfg.eBOSC.pt(f_ind_unique(f)))*exp(-t.^2/(2*st(f)^2)).*exp(1i*2*pi*f_unique(f).*t); % Morlet wavelet with amplitude-power threshold modulation
                 end
                 wl_a = []; wl_a = abs(m{f}); % amplitude of wavelet
                 [maxval(f), maxloc(f)] = max(wl_a);
                 index_fwhm(f) = find(wl_a>= maxval(f)/2, 1, 'first');
                 fwhm_a(f) = wl_a(index_fwhm(f)); % amplitude at fwhm, freq
-                if strcmp(cfg.eBOSC.effSignal, 'PT')
+                if strcmp(cfg.eBOSC.postproc.effSignal, 'PT')
                     fwhm_a(f) = fwhm_a(f)+cfg.eBOSC.pt(f_ind_unique(f)); % re-add power threshold
                 end
                 correctionDist(f) = maxloc(f)-index_fwhm(f);
@@ -69,10 +69,10 @@ if ~isempty(episodes)
 
         % identify which time points to retain and discard
         % Options: only correct at signal edge; correct within entire signal
-        if strcmp(cfg.eBOSC.edgeOnly,'no')
+        if strcmp(cfg.eBOSC.postproc.edgeOnly,'no')
             keep = mean(aMat_retain,1)>0;
             keep = (keep)>0;
-        elseif strcmp(cfg.eBOSC.edgeOnly,'yes')
+        elseif strcmp(cfg.eBOSC.postproc.edgeOnly,'yes')
             keep = mean(aMat_retain,1)>0;
             keep = (keep)>0;
             keepEdgeRemovalOnly = zeros(1, numel(keep));

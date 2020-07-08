@@ -43,10 +43,10 @@ function [detected_new,episodes] = eBOSC_episode_create(B,detected,cfg)
 %                                     to vector entries in .F)
 %                    - .eBOSC.ncyc        = minimum number of cycles of the average 
 %                                     freqency of that segment
-%                    - .eBOSC.BiasCorrection; apply bias correction
-%                    - .eBOSC.method; method to use for bias correction; options: 'MaxBias', 'FWHM'; see Kosciessa et al. supplement for more infos
-%                    - .eBOSC.edgeOnly; correct for wavelet bias only at segment edges ('yes') or also within detected segments ('no')
-%                    - .eBOSC.effSignal; signal to base wavelet correaction on: 'all' - entire signal including background; 'PT' - only signal above the power threshold                
+%                    - .eBOSC.postproc.use; apply bias correction
+%                    - .eBOSC.postproc.method; method to use for bias correction; options: 'MaxBias', 'FWHM'; see Kosciessa et al. supplement for more infos
+%                    - .eBOSC.postproc.edgeOnly; correct for wavelet bias only at segment edges ('yes') or also within detected segments ('no')
+%                    - .eBOSC.postproc.effSignal; signal to base wavelet correaction on: 'all' - entire signal including background; 'PT' - only signal above the power threshold                
 %
 % No default exists for any of the parameters.
 %
@@ -190,10 +190,10 @@ end
 
 %%  Exclude temporal amplitude "leakage" due to wavelet smearing
 
-if strcmp(cfg.eBOSC.BiasCorrection, 'yes')
-    if strcmp(cfg.eBOSC.method, 'HM') % FWHM correction
+if strcmp(cfg.eBOSC.postproc.use, 'yes')
+    if strcmp(cfg.eBOSC.postproc.method, 'HM') % FWHM correction
         [episodes, detected_new] = eBOSC_episode_postproc_fwhm(episodes,cfg, B);
-    elseif strcmp(cfg.eBOSC.method,'MaxBias')
+    elseif strcmp(cfg.eBOSC.postproc.method,'MaxBias')
         [episodes, detected_new] = eBOSC_episode_postproc_maxbias(episodes,cfg, B);
     end
 else

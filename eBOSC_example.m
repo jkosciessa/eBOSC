@@ -27,25 +27,14 @@ cfg.eBOSC.WLpadding         = 500;                                      % paddin
 cfg.eBOSC.detectedPad       = 250;                                      % 'shoulder' for BOSC detected matrix to account for duration threshold
 cfg.eBOSC.trialPad          = 750;                                      % complete padding (WL + shoulder)
 cfg.eBOSC.BGpad             = 750;                                      % padding of segments for BG (only avoiding edge artifacts)
-cfg.eBOSC.fres              = 1.2;                                      % cf. Linkenkaer-Hansen, K., et al. (2001). "Long-Range Temporal Correlations and Scaling Behavior in Human Brain Oscillations." The Journal of Neuroscience 21(4): 1370-1377.
 cfg.eBOSC.fstp              = 1;
-cfg.eBOSC.freqRemoval       = 'JQK';
-cfg.eBOSC.BiasCorrection    = 'yes';                                    % use temporal correction for impact of wavelet?
-cfg.eBOSC.method            = 'MaxBias';
-cfg.eBOSC.edgeOnly          = 'no';
-cfg.eBOSC.effSignal         = 'PT';
 cfg.eBOSC.LowFreqExcludeBG  = 8;                                        % lower bound of bandpass to be excluded prior to background fit
 cfg.eBOSC.HighFreqExcludeBG = 15;                                       % higher bound of bandpass to be excluded prior to background fit
 cfg.eBOSC.waveseg           = [0 9];                                    % include +-3s around stim processing; 3 seconds will be cut at each end during detection --> 3 to 6 (stim only)
-
-% -----------------------------
-% TO DO: rename BiasCorrection to postproc, turn into structure
-% -----------------------------
-
-% cfg.eBOSC.postproc.use               = 'yes'; (default = 'no')
-% cfg.eBOSC.postproc.method            = 'MaxBias'; (default = 'MaxBias', FWHM: 'FH')
-% cfg.eBOSC.postproc.edgeOnly          = 'no'; (default = 'yes')
-% cfg.eBOSC.postproc.effSignal         = 'PT'; (default = 'PT')
+cfg.eBOSC.postproc.use      = 'yes';                                    % Post-processing of rhythmic episodes, i.e., wavelet 'deconvolution' (default = 'no')
+cfg.eBOSC.postproc.method   = 'MaxBias';                                % Deconvolution method (default = 'MaxBias', FWHM: 'FH')
+cfg.eBOSC.postproc.edgeOnly = 'no';                                     % Deconvolution only at on- and offsets of episodes? (default = 'yes')
+cfg.eBOSC.postproc.effSignal= 'PT';                                     % Amplitude deconvolution on whole signal or signal above power threshold? (default = 'PT')
 
 eBOSC = [];
 

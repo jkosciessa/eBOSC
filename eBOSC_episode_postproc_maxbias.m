@@ -62,9 +62,9 @@ if ~isempty(episodes)
             temporalBiasIndices = ind_mid+1-tp:ind_mid+length(a_)-tp;
             tmp_biasVec = B_bias(sub2ind(size(B_bias),repmat(ind_f,numel(f_vec),1),f_vec,temporalBiasIndices'))';
             % temporary "bias" vector (frequency-varying)
-            if strcmp(cfg.eBOSC.effSignal,'all')
+            if strcmp(cfg.eBOSC.postproc.effSignal,'all')
                 tmp_bias = ((tmp_biasVec./amp_max(ind_f,f_vec))*a_(tp));
-            elseif strcmp(cfg.eBOSC.effSignal,'PT')
+            elseif strcmp(cfg.eBOSC.postproc.effSignal,'PT')
                 tmp_bias = ((tmp_biasVec./amp_max(ind_f,f_vec))*(a_(tp)-cfg.eBOSC.pt(ind_f))) + cfg.eBOSC.pt(ind_f);
             end
             % compare to data
@@ -76,9 +76,9 @@ if ~isempty(episodes)
 
         % identify which time points to retain and discard
         % Options: only correct at signal edge; correct within entire signal
-        if strcmp(cfg.eBOSC.edgeOnly,'no')
+        if strcmp(cfg.eBOSC.postproc.edgeOnly,'no')
             keep = sum(m_) == length(a_);
-        elseif strcmp(cfg.eBOSC.edgeOnly,'yes')
+        elseif strcmp(cfg.eBOSC.postproc.edgeOnly,'yes')
             keep = sum(m_) == length(a_);
             keepEdgeRemovalOnly = zeros(1, numel(keep));
             keepEdgeRemovalOnly(find(keep==1,1,'first'):find(keep==1,1,'last')) = 1;
