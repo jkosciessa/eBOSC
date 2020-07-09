@@ -36,6 +36,7 @@ function [episodes] = eBOSC_episode_rm_shoulder(cfg,detected1,episodes)
         episodes.RowID{j}(ex) = [];
         episodes.Amplitude{j}(ex) = [];
         episodes.Frequency{j}(ex) = [];
+        episodes.SNR{j}(ex) = [];
         % shift onset according to padding
         % Important: new col index is indexing w.r.t. to matrix AFTER
         % detected padding is removed!
@@ -45,6 +46,8 @@ function [episodes] = eBOSC_episode_rm_shoulder(cfg,detected1,episodes)
         episodes.FrequencyMean(j) = mean(episodes.Frequency{j});
         % re-compute mean amplitude
         episodes.AmplitudeMean(j) = mean(episodes.Amplitude{j});
+        % re-compute mean SNR
+        episodes.SNRMean(j) = nanmean(epData.SNR{j});
         % re-compute duration
         episodes.DurationS(j) = size(episodes{j,1},1) / cfg.eBOSC.fsample; clear ex
         episodes.DurationC(j) = episodes.DurationS(j)*episodes.FrequencyMean(j);

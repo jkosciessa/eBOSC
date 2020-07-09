@@ -12,24 +12,25 @@ function [episodes_new, detected_new] = eBOSC_episode_postproc_maxbias(episodes,
 % bias per se.
 
 % re-initialize detected_new (for post-proc results)
-detected_new = zeros(size(TFR));
+N_freq = size(TFR,1); N_tp = size(TFR,2);
+detected_new = zeros(N_freq, N_tp);
 
 % check if there are episodes
 if ~isempty(episodes)
 
     % generate "bias" matrix
-    B_bias = zeros(length(cfg.eBOSC.F),numel(cfg.eBOSC.F),2*cfg.eBOSC.npnts+1);
+    B_bias = zeros(length(cfg.eBOSC.F),numel(cfg.eBOSC.F),2*N_tp+1);
 
     for f = 1:length(cfg.eBOSC.F)
         % temporary time vector and signal
         time = 1/cfg.eBOSC.fsample:1/cfg.eBOSC.fsample:(1/cfg.eBOSC.F(f));
         tmp_sig = cos(time*2*pi*cfg.eBOSC.F(f)).*-1+1;
         % signal for time-frequency analysis
-        signal = [zeros(1,cfg.eBOSC.npnts) tmp_sig zeros(1,cfg.eBOSC.npnts)];
+        signal = [zeros(1,N_tp) tmp_sig zeros(1,N_tp)];
         tmp_bias_mat = BOSC_tf(signal,cfg.eBOSC.F,cfg.eBOSC.fsample,cfg.eBOSC.wavenumber);
         % bias matrix
-        B_bias(f,:,1:cfg.eBOSC.npnts+1)   = tmp_bias_mat(:,1:cfg.eBOSC.npnts+1);
-        B_bias(f,:,cfg.eBOSC.npnts+1:end) = fliplr(tmp_bias_mat(:,1:cfg.eBOSC.npnts+1));
+        B_bias(f,:,1:N_tp+1)   = tmp_bias_mat(:,1:N_tp+1);
+        B_bias(f,:,N_tp+1:end) = fliplr(tmp_bias_mat(:,1:N_tp+1));
         % maximum amplitude
         amp_max(f,:) = max(squeeze(B_bias(f,:,:)),[],2);
         % clear variables
@@ -37,7 +38,7 @@ if ~isempty(episodes)
     end; clear f
 
     % midpoint index
-    ind_mid = cfg.eBOSC.npnts+1;
+    ind_mid = N_tp+1;
 
     % set counter
     cnt = 1;
@@ -67,7 +68,7 @@ if ~isempty(episodes)
             if strcmp(cfg.eBOSC.postproc.effSignal,'all')
                 tmp_bias = ((tmp_biasVec./amp_max(ind_f,f_vec))*a_(tp));
             elseif strcmp(cfg.eBOSC.postproc.effSignal,'PT')
-                tmp_bias = ((tmp_biasVec./amp_max(ind_f,f_vec))*(a_(tp)-cfg.eBOSC.pt(ind_f))) + cfg.eBOSC.pt(ind_f);
+                tmp_bias = ((tmp_biasVec./amp_max(ind_f,f_vec))*(a_(tp)-cfg.tmp.pt(ind_f))) + cfg.tmp.pt(ind_f);
             end
             % compare to data
             m_(tp,:) = a_' >= tmp_bias;
@@ -117,12 +118,12 @@ if ~isempty(episodes)
                 epData.ampMean(cnt) = nanmean(epData.amp{cnt});
                 epData.durS(cnt) = single(length(epData.amp{cnt}) ./ cfg.eBOSC.fsample);
                 epData.durC(cnt) = epData.durS(cnt)*epData.freqMean(cnt);
-                % TO DO: calculate SNR
-                epData.SNR(cnt) = 1;
                 epData.trial(cnt) = cfg.tmp.trial;
                 epData.chan(cnt) = cfg.tmp.channel;
                 epData.onset(cnt) = cfg.tmp.detectedTime(epData.col{cnt}(1)); % episode onset in absolute time
                 epData.offset(cnt) = cfg.tmp.detectedTime(epData.col{cnt}(end)); % episode offset in absolute time
+                epData.snr(cnt) = episodes.SNR{e}(ind_epsd(i,1):ind_epsd(i,2));
+                epData.snrMean(cnt) = nanmean(epData.snr{cnt});
                 % set all detected points to one in binary detected matrix
                 detected_new(sub2ind(size(TFR),epData.row{cnt},epData.col{cnt})) = 1;
                 % set counter
@@ -140,10 +141,10 @@ if ~isempty(episodes)
     
     % prepare for the contingency that no episodes are created
     if exist('epData', 'var')
-        episodes_new = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.row', epData.col',  ...
-                'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID'});
+        episodes_new = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.row', epData.col', epData.snr', epData.snrMean',  ...
+                'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID', 'SNR', 'SNRMean'});
     else
-        episodes_new  = cell2table(cell(0,12), 'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID'});
+        episodes_new  = cell2table(cell(0,12), 'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID', 'SNR', 'SNRMean'});
     end
         
 end

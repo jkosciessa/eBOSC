@@ -38,14 +38,14 @@ if ~isempty(episodes)
                 if strcmp(cfg.eBOSC.postproc.effSignal, 'all')
                     m{f}=(TFR(f_ind_unique(f), t_ind(tp)))*exp(-t.^2/(2*st(f)^2)).*exp(1i*2*pi*f_unique(f).*t); % Morlet wavelet with amplitude-power threshold modulation
                 elseif strcmp(cfg.eBOSC.postproc.effSignal, 'PT')
-                    m{f}=(TFR(f_ind_unique(f), t_ind(tp))-cfg.eBOSC.pt(f_ind_unique(f)))*exp(-t.^2/(2*st(f)^2)).*exp(1i*2*pi*f_unique(f).*t); % Morlet wavelet with amplitude-power threshold modulation
+                    m{f}=(TFR(f_ind_unique(f), t_ind(tp))-cfg.tmp.pt(f_ind_unique(f)))*exp(-t.^2/(2*st(f)^2)).*exp(1i*2*pi*f_unique(f).*t); % Morlet wavelet with amplitude-power threshold modulation
                 end
                 wl_a = []; wl_a = abs(m{f}); % amplitude of wavelet
                 [maxval(f), maxloc(f)] = max(wl_a);
                 index_fwhm(f) = find(wl_a>= maxval(f)/2, 1, 'first');
                 fwhm_a(f) = wl_a(index_fwhm(f)); % amplitude at fwhm, freq
                 if strcmp(cfg.eBOSC.postproc.effSignal, 'PT')
-                    fwhm_a(f) = fwhm_a(f)+cfg.eBOSC.pt(f_ind_unique(f)); % re-add power threshold
+                    fwhm_a(f) = fwhm_a(f)+cfg.tmp.pt(f_ind_unique(f)); % re-add power threshold
                 end
                 correctionDist(f) = maxloc(f)-index_fwhm(f);
                 % extract FWHM amplitude of frequency- and amplitude-specific wavelet
@@ -113,12 +113,12 @@ if ~isempty(episodes)
                 epData.ampMean(cnt) = nanmean(epData.amp{cnt});
                 epData.durS(cnt) = single(length(epData.amp{cnt}) ./ cfg.eBOSC.fsample);
                 epData.durC(cnt) = epData.durS(cnt)*epData.freqMean(cnt);
-                % TO DO: calculate SNR
-                epData.SNR(cnt) = 1;
                 epData.trial(cnt) = cfg.tmp.trial;
                 epData.chan(cnt) = cfg.tmp.channel;
                 epData.onset(cnt) = cfg.tmp.detectedTime(epData.col{cnt}(1)); % episode onset in absolute time
                 epData.offset(cnt) = cfg.tmp.detectedTime(epData.col{cnt}(end)); % episode offset in absolute time
+                epData.snr(cnt) = episodes.SNR{e}(ind_epsd(i,1):ind_epsd(i,2));
+                epData.snrMean(cnt) = nanmean(epData.snr{cnt});
                 % set all detected points to one in binary detected matrix
                 detected_new(sub2ind(size(TFR),epData.row{cnt},epData.col{cnt})) = 1;
                 % set counter
@@ -136,9 +136,9 @@ if ~isempty(episodes)
     
     % prepare for the contingency that no episodes are created
     if exist('epData', 'var')
-        episodes_new = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.row', epData.col',  ...
-                'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID'});
+        episodes_new = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.row', epData.col', epData.snr', epData.snrMean',  ...
+                'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID', 'SNR', 'SNRMean'});
     else
-        episodes_new  = cell2table(cell(0,12), 'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID'});
+        episodes_new  = cell2table(cell(0,12), 'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID', 'SNR', 'SNRMean'});
     end
 end

@@ -15,7 +15,7 @@
 %
 %    Copyright 2018 Julian Q. Kosciessa, Thomas H. Grandy, Douglas D. Garrett & Markus Werkle-Bergner.
 
-function [detected_new,episodesTable] = eBOSC_episode_create(TFR,detected,cfg)
+function [detected_new,episodesTable] = eBOSC_episode_create(TFR,eBOSC,cfg)
 
 % This function creates continuous rhythmic "episodes" and attempts to control for the impact of wavelet parameters.
 %  Time-frequency points that best represent neural rhythms are identified by
@@ -73,6 +73,7 @@ function [detected_new,episodesTable] = eBOSC_episode_create(TFR,detected,cfg)
 % formula and apply half of the BP repsonse on top of the center frequency.
 % Because of log-scaling, the widths are not the same on both sides.
 
+detected = eBOSC.detected; % get detected from eBOSC structure
 detected = eBOSC_episode_sparsefreq(cfg, detected, TFR);
 
 %%  Create continuous rhythmic episodes
@@ -133,7 +134,7 @@ while sum(sum(detected_remaining)) > 0
         epData.col(j) = {single(y'-cfg.eBOSC.fstp)};
         epData.freq(j) = {single(cfg.eBOSC.F(epData.row{j}))};
         epData.freqMean(j) = single(avg_frq);
-        epData.amp(j) = {single(TFR(sub2ind(size(TFR),epData.row{j},epData.col{j})))};
+        epData.amp(j) = {single(sqrt(TFR(sub2ind(size(TFR),epData.row{j},epData.col{j}))))}; % calculate sqrt here to get amplitudes
         epData.ampMean(j) = nanmean(epData.amp{j});
         epData.durS(j) = single(length(y) ./ cfg.eBOSC.fsample);
         epData.durC(j) = epData.durS(j)*epData.freqMean(j);
@@ -141,9 +142,8 @@ while sum(sum(detected_remaining)) > 0
         epData.chan(j) = cfg.tmp.channel;
         epData.onset(j) = cfg.tmp.detectedTime(epData.col{j}(1)); % episode onset in absolute time
         epData.offset(j) = cfg.tmp.detectedTime(epData.col{j}(end)); % episode offset in absolute time
-        
-        % TO DO: calculate SNR
-        epData.SNR(j) = 1;
+        epData.snr(j) = {sqrt(epData.amp{j})./eBOSC.static.mp(cfg.tmp.channel,epData.row{j})'}; % extract (static) background power at frequencies
+        epData.snrMean(j) = nanmean(epData.snr{j});
         
         for l = 1:length(y)
             detected_remaining(x(l),y(l)) = 0;
@@ -162,13 +162,15 @@ end; clear detected_remaining
 
 % prepare for the contingency that no episodes are created
 if exist('epData', 'var') && sum(sum(detected_new)) > 0
-    episodesTable = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.row', epData.col',  ...
-            'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID'});
+    episodesTable = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.row', epData.col', epData.snr', epData.snrMean',  ...
+            'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID', 'SNR', 'SNRMean'});
 else
-    episodesTable  = cell2table(cell(0,12), 'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID'});
+    episodesTable  = cell2table(cell(0,12), 'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID', 'SNR', 'SNRMean'});
 end
 
 %%  Exclude temporal amplitude "leakage" due to wavelet smearing
+
+cfg.tmp.pt = eBOSC.static.pt(cfg.tmp.channel,:); % temporarily pass on power threshold 
 
 if strcmp(cfg.eBOSC.postproc.use, 'yes') && exist('epData', 'var') % only do this if there are any episodes to fine-tune
     if strcmp(cfg.eBOSC.postproc.method, 'FWHM')
