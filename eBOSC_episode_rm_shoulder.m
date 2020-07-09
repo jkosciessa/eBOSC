@@ -18,23 +18,43 @@
 function [episodes] = eBOSC_episode_rm_shoulder(cfg,detected1,episodes)
 % Remove parts of the episode that fall into the 'shoulder' of individual
 % trials.
+% There is no check for adherence to a given duration criterion necessary,
+% as the point of the padding of the detected matrix is exactly to account
+% for allowing the presence of a few cycles.
 
     ind1 = cfg.eBOSC.detectedPad+1;
     ind2 = size(detected1,2) - cfg.eBOSC.detectedPad;
     cnt = 1;
     rmv = [];
     for j = 1:size(episodes,1)
-        ex = find(episodes{j,1}(:,2) < ind1 | episodes{j,1}(:,2) > ind2);
-        episodes{j,1}(ex,:) = [];
-        episodes{j,1}(:,2) = episodes{j,1}(:,2) - ind1 + 1;
-        episodes{j,2}(ex,:) = [];
-        episodes{j,3}       = mean(episodes{j,2}(:,1));
-        episodes{j,4}       = size(episodes{j,1},1) / cfg.eBOSC.fsample; clear ex
-        if isempty(episodes{j,1})
+        % get time points of current episode
+        tmp_col = episodes.ColID{j};
+        % find time points that fall inside the padding (i.e. on- and offset)
+        ex = find(tmp_col < ind1 | tmp_col > ind2);
+        % remove padded time points from episodes
+        episodes.ColID{j}(ex) = [];
+        episodes.RowID{j}(ex) = [];
+        episodes.Amplitude{j}(ex) = [];
+        episodes.Frequency{j}(ex) = [];
+        % shift onset according to padding
+        % Important: new col index is indexing w.r.t. to matrix AFTER
+        % detected padding is removed!
+        episodes.ColID{j} = tmp_col - ind1 + 1;
+        % WIP: episodes{j,1}(:,2) = episodes.ColID{j}
+        % re-compute mean frequency
+        episodes.FrequencyMean(j) = mean(episodes.Frequency{j});
+        % re-compute mean amplitude
+        episodes.AmplitudeMean(j) = mean(episodes.Amplitude{j});
+        % re-compute duration
+        episodes.DurationS(j) = size(episodes{j,1},1) / cfg.eBOSC.fsample; clear ex
+        episodes.DurationC(j) = episodes.DurationS(j)*episodes.FrequencyMean(j);
+        % if nothing remains of episode: track for later deletion
+        if isempty(episodes.ColID{j})
             rmv(cnt,1) = j;
             cnt = cnt + 1;
         end
     end; clear j cnt
+    % remove now empty episodes from table    
     episodes(rmv,:) = []; clear rmv
 
 end % function end
