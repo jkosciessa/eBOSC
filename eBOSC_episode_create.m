@@ -15,7 +15,7 @@
 %
 %    Copyright 2018 Julian Q. Kosciessa, Thomas H. Grandy, Douglas D. Garrett & Markus Werkle-Bergner.
 
-function [detected_new,episodes] = eBOSC_episode_create(TFR,detected,cfg)
+function [detected_new,episodesTable] = eBOSC_episode_create(TFR,detected,cfg)
 
 % This function creates continuous rhythmic "episodes" and attempts to control for the impact of wavelet parameters.
 %  Time-frequency points that best represent neural rhythms are identified by
@@ -151,29 +151,27 @@ while sum(sum(detected_remaining)) > 0
 end; clear detected_remaining
 
 % prepare for the contingency that no episodes are created
-if exist('epData', 'var')
-    episodes_new = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.row', epData.col',  ...
+if exist('epData', 'var') && sum(sum(detected_new)) > 0
+    episodesTable = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.row', epData.col',  ...
             'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID'});
 else
-    episodes_new  = cell2table(cell(0,12), 'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID'});
-end
-    
-if sum(sum(detected_new)) == 0
-    episodes = {};
+    episodesTable  = cell2table(cell(0,12), 'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID'});
 end
 
 %%  Exclude temporal amplitude "leakage" due to wavelet smearing
 
-if strcmp(cfg.eBOSC.postproc.use, 'yes')
+if strcmp(cfg.eBOSC.postproc.use, 'yes') && exist('epData', 'var') % only do this if there are any episodes to fine-tune
     if strcmp(cfg.eBOSC.postproc.method, 'FWHM')
-        [episodes, detected_new] = eBOSC_episode_postproc_fwhm(episodesTable,cfg, TFR);
+        [episodesTable, detected_new] = eBOSC_episode_postproc_fwhm(episodesTable,cfg, TFR);
     elseif strcmp(cfg.eBOSC.postproc.method,'MaxBias')
-        [episodes, detected_new] = eBOSC_episode_postproc_maxbias(episodesTable,cfg, TFR);
+        [episodesTable, detected_new] = eBOSC_episode_postproc_maxbias(episodesTable,cfg, TFR);
     end
 else
     
 %% remove episodes and part of episodes that fall into 'shoulder'
 
-[episodes] = eBOSC_episode_rm_shoulder(cfg,detected_new,episodes);
+if ~isempty(episodesTable)
+    [episodesTable] = eBOSC_episode_rm_shoulder(cfg,detected_new,episodesTable);
+end
 
 end
