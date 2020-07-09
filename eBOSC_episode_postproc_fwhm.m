@@ -1,4 +1,7 @@
-function [episodes_new, detected_new] = eBOSC_episode_postproc_fwhm(episodes,cfg, B)
+function [episodes_new, detected_new] = eBOSC_episode_postproc_fwhm(episodes,cfg, TFR)
+
+% re-initialize detected_new (for post-proc results)
+detected_new = zeros(size(TFR));
 
 if ~isempty(episodes)
             
@@ -6,17 +9,17 @@ if ~isempty(episodes)
     cnt = 1;
 
     for e = 1:size(episodes,1)
-
+        
         % get temporary frequency vector
-        f_ = episodes{e,2}(:,1);
+        f_ = episodes.Frequency{e};
         f_unique = unique(f_);
-        f_ind_unique = find(ismember(cfg.eBOSC.F', f_unique, 'rows'));
+        f_ind_unique = find(ismember(cfg.eBOSC.F', f_unique', 'rows'));
 
         % get temporary amplitude vector
-        a_ = episodes{e,2}(:,2);
+        a_ = episodes.Amplitude{e};
 
-        % location in time with reference to matrix B
-        t_ind = episodes{e,1}(:,2);
+        % location in time with reference to matrix TFR
+        t_ind = episodes.ColID{e};
 
         % initiate bias matrix
         biasMat = [];
@@ -33,9 +36,9 @@ if ~isempty(episodes)
                 st=1./(2*pi*(f_unique/cfg.eBOSC.wavenumber));
                 t=-3.6*st(f):(1/cfg.eBOSC.fsample):3.6*st(f);
                 if strcmp(cfg.eBOSC.postproc.effSignal, 'all')
-                    m{f}=(B(f_ind_unique(f), t_ind(tp)))*exp(-t.^2/(2*st(f)^2)).*exp(1i*2*pi*f_unique(f).*t); % Morlet wavelet with amplitude-power threshold modulation
+                    m{f}=(TFR(f_ind_unique(f), t_ind(tp)))*exp(-t.^2/(2*st(f)^2)).*exp(1i*2*pi*f_unique(f).*t); % Morlet wavelet with amplitude-power threshold modulation
                 elseif strcmp(cfg.eBOSC.postproc.effSignal, 'PT')
-                    m{f}=(B(f_ind_unique(f), t_ind(tp))-cfg.eBOSC.pt(f_ind_unique(f)))*exp(-t.^2/(2*st(f)^2)).*exp(1i*2*pi*f_unique(f).*t); % Morlet wavelet with amplitude-power threshold modulation
+                    m{f}=(TFR(f_ind_unique(f), t_ind(tp))-cfg.eBOSC.pt(f_ind_unique(f)))*exp(-t.^2/(2*st(f)^2)).*exp(1i*2*pi*f_unique(f).*t); % Morlet wavelet with amplitude-power threshold modulation
                 end
                 wl_a = []; wl_a = abs(m{f}); % amplitude of wavelet
                 [maxval(f), maxloc(f)] = max(wl_a);
@@ -80,7 +83,7 @@ if ~isempty(episodes)
             keep = keepEdgeRemovalOnly;
         end
 
-         % get new episodes
+        % get new episodes
         keep   = [0 keep 0];
         d_keep = diff(keep);
 
@@ -90,29 +93,39 @@ if ~isempty(episodes)
         ind_epsd(:,1) = find(d_keep ==  1);
         ind_epsd(:,2) = find(d_keep == -1)-1;
 
-        for i = 1:size(ind_epsd,1)
-            % temporary frequency & amplitude vector
-            tmp = episodes{e,2}(ind_epsd(i,1):ind_epsd(i,2),:);
+        for i = 1:size(ind_epsd,1)  
             % check for passing the duration requirement
             % get average frequency
-            avg_frq = mean(tmp(:,1));
+            avg_frq = mean(f_(ind_epsd(i,1):ind_epsd(i,2)));
             % match to closest frequency
             [~, indF] = min(abs(cfg.eBOSC.F-avg_frq));
             % check number of data points to fulfill number of cycles criterion
             num_pnt = floor((cfg.eBOSC.fsample ./ avg_frq) .* (cfg.eBOSC.ncyc(indF))); clear indF;
-            if num_pnt <= size(tmp,1)
-                episodes_new{cnt,1} = episodes{e,1}(ind_epsd(i,1):ind_epsd(i,2),:);
-                episodes_new{cnt,2} = episodes{e,2}(ind_epsd(i,1):ind_epsd(i,2),:);
-                episodes_new{cnt,3} = single(avg_frq);
-                episodes_new{cnt,4} = single(size(tmp,1) ./ cfg.eBOSC.fsample);
-                for l = 1:size(tmp,1)
-                    detected_new(episodes_new{cnt,1}(l,1),episodes_new{cnt,1}(l,2)) = 1;
-                end; clear l
+            % if this duration criterion is still fulfilled, encode in table
+            if num_pnt <= size(f_,2)
+                % exchange x and y with relevant info
+                % update all data in table with new episode limits
+                epData.row(cnt) = {episodes.RowID{e}(ind_epsd(i,1):ind_epsd(i,2))};
+                epData.col(cnt) = {episodes.ColID{e}(ind_epsd(i,1):ind_epsd(i,2))};
+                epData.freq(cnt) = {f_(ind_epsd(i,1):ind_epsd(i,2))};
+                epData.freqMean(cnt) = single(avg_frq);
+                epData.amp(cnt) = {a_(ind_epsd(i,1):ind_epsd(i,2))};
+                epData.ampMean(cnt) = nanmean(epData.amp{cnt});
+                epData.durS(cnt) = single(length(epData.amp{cnt}) ./ cfg.eBOSC.fsample);
+                epData.durC(cnt) = epData.durS(cnt)*epData.freqMean(cnt);
+                % TO DO: calculate SNR
+                epData.SNR(cnt) = 1;
+                epData.trial(cnt) = 1;
+                epData.chan(cnt) = 1;
+                epData.onset(cnt) = 1; % get onset in absolute time
+                epData.offset(cnt) = 1; % get offset in relative time
+                % set all detected points to one in binary detected matrix
+                detected_new(sub2ind(size(TFR),epData.row{cnt},epData.col{cnt})) = 1;
                 % set counter
                 cnt = cnt + 1;
             end
             % clear variables
-            clear avg_frq num_pnt tmp
+            clear avg_frq num_pnt
         end
         % clear variables
         clear ind_epsd
@@ -120,5 +133,12 @@ if ~isempty(episodes)
         % clear variables
         clear f_ a_ m_ keep d_keep
     end; clear e
-
+    
+    % prepare for the contingency that no episodes are created
+    if exist('epData', 'var')
+        episodes_new = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.row', epData.col',  ...
+                'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID'});
+    else
+        episodes_new  = cell2table(cell(0,12), 'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID'});
+    end
 end

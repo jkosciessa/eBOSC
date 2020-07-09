@@ -68,9 +68,11 @@ detected = eBOSC_episode_sparsefreq(cfg, detected, TFR);
 %%  Create continuous rhythmic episodes
 
 % add zeros
-detected1        = [zeros(cfg.eBOSC.fstp,size(detected,2)); detected; zeros(cfg.eBOSC.fstp,size(detected,2))];
-detected1(:,1)   = 0;
-detected1(:,end) = 0;
+detected_remaining        = [zeros(cfg.eBOSC.fstp,size(detected,2)); detected; zeros(cfg.eBOSC.fstp,size(detected,2))];
+detected_remaining(:,1)   = 0;
+detected_remaining(:,end) = 0;
+% detected_remaining serves as a dummy matrix; unless all entries from detected_remaining are
+% removed, we will continue extracting episodes
 tmp_B1        = [zeros(cfg.eBOSC.fstp,size(detected,2)); TFR.*detected; zeros(cfg.eBOSC.fstp,size(detected,2))];
 tmp_B1(:,1)   = 0;
 tmp_B1(:,end) = 0;
@@ -79,16 +81,16 @@ detected_new     = zeros(size(detected));
 % segment counter
 j = 1;
 
-while sum(sum(detected1)) > 0
+while sum(sum(detected_remaining)) > 0
     % sampling point counter
     k = 1;
     % find seed
-    [x(k),y(k)] = find(detected1==1,1);
+    [x(k),y(k)] = find(detected_remaining==1,1);
     % check next sampling point
     chck = 0;
     while chck == 0
         % next sampling point
-        tmp = find(detected1(x(k)-cfg.eBOSC.fstp:x(k)+cfg.eBOSC.fstp,y(k)+1)==1);
+        tmp = find(detected_remaining(x(k)-cfg.eBOSC.fstp:x(k)+cfg.eBOSC.fstp,y(k)+1)==1);
         if ~isempty(tmp)
             y(k+1) = y(k) + 1;
             if numel(tmp) > 1 
@@ -117,11 +119,11 @@ while sum(sum(detected1)) > 0
     
     if length(y) >= num_pnt
 
-        epData.col(j) = {single(x'-cfg.eBOSC.fstp)};
-        epData.row(j) = {single(y'-cfg.eBOSC.fstp)};
-        epData.freq(j) = {single(cfg.eBOSC.F(epData.col{j}))};
+        epData.row(j) = {single(x'-cfg.eBOSC.fstp)};
+        epData.col(j) = {single(y'-cfg.eBOSC.fstp)};
+        epData.freq(j) = {single(cfg.eBOSC.F(epData.row{j}))};
         epData.freqMean(j) = single(avg_frq);
-        epData.amp(j) = {single(TFR(sub2ind(size(TFR),epData.col{j},epData.row{j})))};
+        epData.amp(j) = {single(TFR(sub2ind(size(TFR),epData.row{j},epData.col{j})))};
         epData.ampMean(j) = nanmean(epData.amp{j});
         epData.durS(j) = single(length(y) ./ cfg.eBOSC.fsample);
         epData.durC(j) = epData.durS(j)*epData.freqMean(j);
@@ -134,23 +136,28 @@ while sum(sum(detected1)) > 0
         epData.offset(j) = 1; % get offset in relative time
          
         for l = 1:length(y)
-            detected1(x(l),y(l)) = 0;
-            detected_new(epData.col{j}(l),epData.row{j}(l)) = 1;
+            detected_remaining(x(l),y(l)) = 0;
+            detected_new(epData.row{j}(l),epData.col{j}(l)) = 1;
         end
         
         j = j + 1;
     else
         for l = 1:length(y)
-            detected1(x(l),y(l)) = 0;
+            detected_remaining(x(l),y(l)) = 0;
         end        
     end
     % clear variables
     clear k x y chck tmp avg_frq num_pnt m
-end
+end; clear detected_remaining
 
-episodesTable = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.col', epData.row',  ...
-            'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'ColID', 'RowID'});
-        
+% prepare for the contingency that no episodes are created
+if exist('epData', 'var')
+    episodes_new = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.row', epData.col',  ...
+            'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID'});
+else
+    episodes_new  = cell2table(cell(0,12), 'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID'});
+end
+    
 if sum(sum(detected_new)) == 0
     episodes = {};
 end
@@ -159,9 +166,9 @@ end
 
 if strcmp(cfg.eBOSC.postproc.use, 'yes')
     if strcmp(cfg.eBOSC.postproc.method, 'FWHM')
-        [episodes, detected_new] = eBOSC_episode_postproc_fwhm(episodes,cfg, TFR);
+        [episodes, detected_new] = eBOSC_episode_postproc_fwhm(episodesTable,cfg, TFR);
     elseif strcmp(cfg.eBOSC.postproc.method,'MaxBias')
-        [episodes, detected_new] = eBOSC_episode_postproc_maxbias(episodes,cfg, TFR);
+        [episodes, detected_new] = eBOSC_episode_postproc_maxbias(episodesTable,cfg, TFR);
     end
 else
     
