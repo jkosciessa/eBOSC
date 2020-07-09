@@ -137,14 +137,14 @@ while sum(sum(detected_remaining)) > 0
         epData.ampMean(j) = nanmean(epData.amp{j});
         epData.durS(j) = single(length(y) ./ cfg.eBOSC.fsample);
         epData.durC(j) = epData.durS(j)*epData.freqMean(j);
+        epData.trial(j) = cfg.tmp.trial;
+        epData.chan(j) = cfg.tmp.channel;
+        epData.onset(j) = cfg.tmp.detectedTime(epData.col{j}(1)); % episode onset in absolute time
+        epData.offset(j) = cfg.tmp.detectedTime(epData.col{j}(end)); % episode offset in absolute time
         
         % TO DO: calculate SNR
         epData.SNR(j) = 1;
-        epData.trial(j) = 1;
-        epData.chan(j) = 1;
-        epData.onset(j) = 1; % get onset in absolute time
-        epData.offset(j) = 1; % get offset in relative time
-         
+        
         for l = 1:length(y)
             detected_remaining(x(l),y(l)) = 0;
             detected_new(epData.row{j}(l),epData.col{j}(l)) = 1;

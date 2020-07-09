@@ -119,10 +119,10 @@ if ~isempty(episodes)
                 epData.durC(cnt) = epData.durS(cnt)*epData.freqMean(cnt);
                 % TO DO: calculate SNR
                 epData.SNR(cnt) = 1;
-                epData.trial(cnt) = 1;
-                epData.chan(cnt) = 1;
-                epData.onset(cnt) = 1; % get onset in absolute time
-                epData.offset(cnt) = 1; % get offset in relative time
+                epData.trial(cnt) = cfg.tmp.trial;
+                epData.chan(cnt) = cfg.tmp.channel;
+                epData.onset(cnt) = cfg.tmp.detectedTime(epData.col{cnt}(1)); % episode onset in absolute time
+                epData.offset(cnt) = cfg.tmp.detectedTime(epData.col{cnt}(end)); % episode offset in absolute time
                 % set all detected points to one in binary detected matrix
                 detected_new(sub2ind(size(TFR),epData.row{cnt},epData.col{cnt})) = 1;
                 % set counter

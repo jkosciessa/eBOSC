@@ -48,6 +48,9 @@ function [episodes] = eBOSC_episode_rm_shoulder(cfg,detected1,episodes)
         % re-compute duration
         episodes.DurationS(j) = size(episodes{j,1},1) / cfg.eBOSC.fsample; clear ex
         episodes.DurationC(j) = episodes.DurationS(j)*episodes.FrequencyMean(j);
+        % update absolute on-/offsets
+        episodes.Onset(j) = cfg.tmp.finalTime(episodes.ColID{j}(1)); % episode onset in absolute time
+        episodes.Offset(j) = cfg.tmp.finalTime(episodes.ColID{j}(end)); % episode offset in absolute time
         % if nothing remains of episode: track for later deletion
         if isempty(episodes.ColID{j})
             rmv(cnt,1) = j;

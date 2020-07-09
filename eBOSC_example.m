@@ -18,8 +18,6 @@ addpath([pn.eBOSC, 'external/NoiseTools/']);
 
 %%  eBOSC parameters
 
-
-
 % general setup
 cfg.eBOSC.F                 = 2.^[1:.125:6];                            % frequency sampling (~Whitten et al., 2011), but higher frequency resolution
 cfg.eBOSC.wavenumber        = 6;                                        % wavelet family parameter (time-frequency tradeoff) [recommended: ~6]
@@ -80,9 +78,10 @@ eBOSC = [];
 % TO DO: include fieldtrip-style automatic detection of dimord
 % -----------------------------
 
-eBOSC.inputTime = data.time{1,1};
-eBOSC.detectedTime = eBOSC.inputTime(cfg.eBOSC.pad.tfr_sample+1:end-cfg.eBOSC.pad.tfr_sample);
-eBOSC.finalTime = eBOSC.inputTime(cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample);
+cfg.tmp.inputTime = data.time{1,1};
+cfg.tmp.detectedTime = eBOSC.inputTime(cfg.eBOSC.pad.tfr_sample+1:end-cfg.eBOSC.pad.tfr_sample);
+cfg.tmp.finalTime = eBOSC.inputTime(cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample);
+cfg.tmp.channel = e; % encode current channel for later
 
 %% TF analysis for whole signal to prepare background fit
 
@@ -147,6 +146,8 @@ for indTrial = 1:eBOSC.Ntrial
     eBOSC.pepisode{1,indTrial}(e,:)  = zeros(1,size(cfg.eBOSC.F,2));
     eBOSC.abundance{1,indTrial}(e,:) = zeros(1,size(cfg.eBOSC.F,2));
     eBOSC.episodes{1,indTrial}{e,1}  = [];
+        
+    cfg.tmp.trial = indTrial; % encode current channel for later
 
     % get wavelet transform for single trial
     % WLpadding is removed to avoid edge artifacts during the
