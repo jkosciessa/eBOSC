@@ -32,10 +32,6 @@ cfg.eBOSC.pad.total_s = cfg.eBOSC.pad.tfr_s + cfg.eBOSC.pad.detection_s;        
 cfg.eBOSC.pad.total_sample = cfg.eBOSC.pad.tfr_sample + cfg.eBOSC.pad.detection_sample;
 cfg.eBOSC.pad.background_s = cfg.eBOSC.pad.tfr_s;                                           % padding of segments for BG (only avoiding edge artifacts)
 cfg.eBOSC.pad.background_sample = cfg.eBOSC.pad.tfr_sample;
-% WLpadding = tfr_sample
-% detectedPad = detection_s
-% trialPad = total_s
-% BGpad = background_s
 
 % threshold settings
 cfg.eBOSC.ncyc              = repmat(3, 1, numel(cfg.eBOSC.F));         % vector of duration thresholds at each frequency
