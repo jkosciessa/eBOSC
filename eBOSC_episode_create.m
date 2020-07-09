@@ -165,10 +165,10 @@ end; clear detected_remaining
 % prepare for the contingency that no episodes are created
 varNames = {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID', 'SNR', 'SNRMean'};
 if exist('epData', 'var')
-    episodes_new = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.row', epData.col', epData.snr', epData.snrMean',  ...
+    episodesTable = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.row', epData.col', epData.snr', epData.snrMean',  ...
             'VariableNames', varNames);
 else
-    episodes_new  = cell2table(cell(0,numel(varNames)), 'VariableNames', varNames);
+    episodesTable  = cell2table(cell(0,numel(varNames)), 'VariableNames', varNames);
 end; clear varNames
 
 %%  Exclude temporal amplitude "leakage" due to wavelet smearing
