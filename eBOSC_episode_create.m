@@ -52,18 +52,20 @@ function [detected_new,episodesTable] = eBOSC_episode_create(TFR,eBOSC,cfg)
 %
 %  output:  detected_new = new detected matrix with frequency leakage removed
 %           episodesTable = table with specific episode information:
-%                 (WIP) Trial: trial index
-%                 (WIP) Channel: channel index
+%                 Trial: trial index
+%                 Channel: channel index
 %                 FrequencyMean: mean frequency of episode (Hz)
 %                 DurationS: episode duration (in sec)
 %                 DurationC: episode duration (in cycles, based on mean frequency)
 %                 AmplitudeMean: mean amplitude of amplitude
-%                 (WIP) Onset: episode onset in s
-%                 (WIP) Offset:
+%                 Onset: episode onset in s
+%                 Offset: episode onset in s
 %                 Amplitude: (cell) time-resolved wavelet-based amplitude estimates during episode
 %                 Frequency: (cell) time-resolved wavelet-based frequency
 %                 RowID: (cell) row index (frequency dimension): following eBOSC_episode_rm_shoulder relative to data excl. detection padding
 %                 ColID: (cell) column index (time dimension)
+%                 SNR: (cell) time-resolved signal-to-noise ratio: momentary amplitude/static background estimate at channel*frequency
+%                 SNRMean: mean signal-to-noise ratio
 %
 % To DO: given that ColID is always continuous, simply encode on- and offsets
 
@@ -161,12 +163,13 @@ while sum(sum(detected_remaining)) > 0
 end; clear detected_remaining
 
 % prepare for the contingency that no episodes are created
-if exist('epData', 'var') && sum(sum(detected_new)) > 0
-    episodesTable = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.row', epData.col', epData.snr', epData.snrMean',  ...
-            'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID', 'SNR', 'SNRMean'});
+varNames = {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID', 'SNR', 'SNRMean'};
+if exist('epData', 'var')
+    episodes_new = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.row', epData.col', epData.snr', epData.snrMean',  ...
+            'VariableNames', varNames);
 else
-    episodesTable  = cell2table(cell(0,12), 'VariableNames', {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID', 'SNR', 'SNRMean'});
-end
+    episodes_new  = cell2table(cell(0,numel(varNames)), 'VariableNames', varNames);
+end; clear varNames
 
 %%  Exclude temporal amplitude "leakage" due to wavelet smearing
 
