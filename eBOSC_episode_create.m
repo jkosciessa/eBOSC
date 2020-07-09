@@ -51,11 +51,21 @@ function [detected_new,episodesTable] = eBOSC_episode_create(TFR,detected,cfg)
 % No default exists for any of the parameters.
 %
 %  output:  detected_new = new detected matrix with frequency leakage removed
-%           episodes     = {nx4} with specific episode information
-%                          {n,1} = episode indices
-%                          {n,2} = average frequency
-%                          {n,3} = episode length (in sec)
-% 
+%           episodesTable = table with specific episode information:
+%                 (WIP) Trial: trial index
+%                 (WIP) Channel: channel index
+%                 FrequencyMean: mean frequency of episode (Hz)
+%                 DurationS: episode duration (in sec)
+%                 DurationC: episode duration (in cycles, based on mean frequency)
+%                 AmplitudeMean: mean amplitude of amplitude
+%                 (WIP) Onset: episode onset in s
+%                 (WIP) Offset:
+%                 Amplitude: (cell) time-resolved wavelet-based amplitude estimates during episode
+%                 Frequency: (cell) time-resolved wavelet-based frequency
+%                 RowID: (cell) row index (frequency dimension): following eBOSC_episode_rm_shoulder relative to data excl. detection padding
+%                 ColID: (cell) column index (time dimension)
+%
+% To DO: given that ColID is always continuous, simply encode on- and offsets
 
 %% Accounting for the frequency spread of the wavelet
 
