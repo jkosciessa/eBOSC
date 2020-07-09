@@ -18,15 +18,26 @@ addpath([pn.eBOSC, 'external/NoiseTools/']);
 
 %%  eBOSC parameters
 
+
+
 % general setup
 cfg.eBOSC.F                 = 2.^[1:.125:6];                            % frequency sampling (~Whitten et al., 2011), but higher frequency resolution
 cfg.eBOSC.wavenumber        = 6;                                        % wavelet family parameter (time-frequency tradeoff) [recommended: ~6]
 cfg.eBOSC.fsample           = 500;                                      % current sampling frequency of EEG data
-cfg.eBOSC.WLpadding         = 500;                                      % padding to avoid edge artifacts due to WL [SPs]
-cfg.eBOSC.detectedPad       = 250;                                      % 'shoulder' for BOSC detected matrix to account for duration threshold
-cfg.eBOSC.trialPad          = 750;                                      % complete padding (WL + shoulder)
-cfg.eBOSC.BGpad             = 750;                                      % padding of segments for BG (only avoiding edge artifacts)
-cfg.eBOSC.waveseg           = [0 9];                                    % include +-3s around stim processing; 3 seconds will be cut at each end during detection --> 3 to 6 (stim only)
+
+% padding
+cfg.eBOSC.pad.tfr_s = 1;                                                                    % padding following wavelet transform to avoid edge artifacts in seconds (bi-lateral)
+cfg.eBOSC.pad.tfr_sample = cfg.eBOSC.pad.tfr_s.*cfg.eBOSC.fsample;                          % automatic sample rate calculation
+cfg.eBOSC.pad.detection_s = .5;                                                             % padding following rhythm detection in seconds (bi-lateral); 'shoulder' for BOSC detected matrix to account for duration threshold
+cfg.eBOSC.pad.detection_sample = cfg.eBOSC.pad.detection_s.*cfg.eBOSC.fsample;              % automatic sample rate calculation
+cfg.eBOSC.pad.total_s = cfg.eBOSC.pad.tfr_s + cfg.eBOSC.pad.detection_s;                    % complete padding (WL + shoulder)
+cfg.eBOSC.pad.total_sample = cfg.eBOSC.pad.tfr_sample + cfg.eBOSC.pad.detection_sample;
+cfg.eBOSC.pad.background_s = cfg.eBOSC.pad.tfr_s;                                           % padding of segments for BG (only avoiding edge artifacts)
+cfg.eBOSC.pad.background_sample = cfg.eBOSC.pad.tfr_sample;
+% WLpadding = tfr_sample
+% detectedPad = detection_s
+% trialPad = total_s
+% BGpad = background_s
 
 % threshold settings
 cfg.eBOSC.ncyc              = repmat(3, 1, numel(cfg.eBOSC.F));         % vector of duration thresholds at each frequency
@@ -70,8 +81,8 @@ eBOSC = [];
 % -----------------------------
 
 eBOSC.inputTime = data.time{1,1};
-eBOSC.detectedTime = eBOSC.inputTime(cfg.eBOSC.WLpadding+1:end-cfg.eBOSC.WLpadding);
-eBOSC.finalTime = eBOSC.inputTime(cfg.eBOSC.trialPad+1:end-cfg.eBOSC.trialPad);
+eBOSC.detectedTime = eBOSC.inputTime(cfg.eBOSC.pad.tfr_sample+1:end-cfg.eBOSC.pad.tfr_sample);
+eBOSC.finalTime = eBOSC.inputTime(cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample);
 
 %% TF analysis for whole signal to prepare background fit
 
@@ -93,7 +104,7 @@ end; clear indTrial
 BG = [];
 for indTrial = 1:eBOSC.Ntrial
     % remove BGpad at beginning and end to avoid edge artifacts
-    BG = [BG TFR.trial{indTrial}(:,cfg.eBOSC.BGpad+1:end-cfg.eBOSC.BGpad)];
+    BG = [BG TFR.trial{indTrial}(:,cfg.eBOSC.pad.background_sample+1:end-cfg.eBOSC.pad.background_sample)];
 end; clear indTrial
 
 % find peak between 8-15 Hz
@@ -116,9 +127,9 @@ mp = 10.^(polyval(pv,log10(cfg.eBOSC.F)));
 
 % save multiple time-invariant estimates that could be of interest:
 % overall wavelet power spectrum (NOT only background)
-eBOSC.static.bg_pow(e,:)        = mean(BG(:,cfg.eBOSC.trialPad+1:end-cfg.eBOSC.trialPad),2);
+eBOSC.static.bg_pow(e,:)        = mean(BG(:,cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample),2);
 % log10-transformed wavelet power spectrum (NOT only background)
-eBOSC.static.bg_log10_pow(e,:)  = mean(log10(BG(:,cfg.eBOSC.trialPad+1:end-cfg.eBOSC.trialPad)),2);
+eBOSC.static.bg_log10_pow(e,:)  = mean(log10(BG(:,cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample)),2);
 % intercept and slope parameters of the robust linear 1/f fit (log-log)
 eBOSC.static.pv(e,:)            = pv;
 % linear background power at each estimated frequency
@@ -142,7 +153,7 @@ for indTrial = 1:eBOSC.Ntrial
     % detection. Note that detectedPad still remains so that there
     % is no problems with too few sample points at the edges to
     % fulfill the numcycles criterion.
-    TFR_ = TFR.trial{1,indTrial}(:,cfg.eBOSC.WLpadding+1:end-cfg.eBOSC.WLpadding);
+    TFR_ = TFR.trial{1,indTrial}(:,cfg.eBOSC.pad.tfr_sample+1:end-cfg.eBOSC.pad.tfr_sample);
 
 %%  Detect rhythms + calculate Pepisode (~standard BOSC)
 
@@ -160,7 +171,7 @@ for indTrial = 1:eBOSC.Ntrial
     eBOSC.detectedAlpha(e,:) = alphaDetected;
 
     % encode original signals (optional)
-    origData = data.trial{1}(e, cfg.eBOSC.WLpadding+1:end-cfg.eBOSC.WLpadding);
+    origData = data.trial{1}(e, cfg.eBOSC.pad.tfr_sample+1:end-cfg.eBOSC.pad.tfr_sample);
     eBOSC.origData(e,:) = origData;
 
     % Supplementary Plot: plot only rhythmic episodes
@@ -184,12 +195,15 @@ for indTrial = 1:eBOSC.Ntrial
     [detected1,episodes] = eBOSC_episode_create(squeeze(TFR_),detected, cfg);
 
     % encode abundance of episodes (optional)
-    eBOSC.abundance_ep(a,c,k,:) = mean(detected1(:,cfg.eBOSC.detectedPad+1:end-cfg.eBOSC.detectedPad),2);
+    eBOSC.abundance_ep(a,c,k,:) = mean(detected1(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample),2);
 
     % Supplementary Plot: original detected vs. sparse episode power
     figure; 
     subplot(121); imagesc(detected.*squeeze(TFR_));
     subplot(122); imagesc(detected1.*squeeze(TFR_));
+    
+    % remove padding for detection (already done for episodes)
+    detected1 = detected1(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample);
 
 
 end; clear indTrial;

@@ -32,7 +32,7 @@ function [detected_new,episodesTable] = eBOSC_episode_create(TFR,detected,cfg)
 %  and following time points is tested with the goal to exclude supra-threshold time
 %  points that are due to the wavelet extension in time. 
 %
-%  input:   TFR        = time-frequency matrix
+%  input:   TFR      = time-frequency matrix (excl. WLpadding)
 %           detected = detected oscillations in TFR (based on power and duration threshold)
 %           cfg      - .eBOSC.F           = frequency resolution of TFR (log-scaled!)
 %                    - .eBOSC.fsample     = sampling frequency
