@@ -21,6 +21,7 @@ if ~isempty(episodes)
     % generate "bias" matrix
     B_bias = zeros(length(cfg.eBOSC.F),numel(cfg.eBOSC.F),2*N_tp+1);
 
+    amp_max = NaN(length(cfg.eBOSC.F), length(cfg.eBOSC.F));
     for f = 1:length(cfg.eBOSC.F)
         % temporary time vector and signal
         time = 1/cfg.eBOSC.fsample:1/cfg.eBOSC.fsample:(1/cfg.eBOSC.F(f));
@@ -122,7 +123,7 @@ if ~isempty(episodes)
                 epData.chan(cnt) = cfg.tmp.channel;
                 epData.onset(cnt) = cfg.tmp.detectedTime(epData.col{cnt}(1)); % episode onset in absolute time
                 epData.offset(cnt) = cfg.tmp.detectedTime(epData.col{cnt}(end)); % episode offset in absolute time
-                epData.snr(cnt) = episodes.SNR{e}(ind_epsd(i,1):ind_epsd(i,2));
+                epData.snr(cnt) = {episodes.SNR{e}(ind_epsd(i,1):ind_epsd(i,2))};
                 epData.snrMean(cnt) = nanmean(epData.snr{cnt});
                 % set all detected points to one in binary detected matrix
                 detected_new(sub2ind(size(TFR),epData.row{cnt},epData.col{cnt})) = 1;

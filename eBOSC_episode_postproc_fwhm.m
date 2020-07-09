@@ -117,7 +117,7 @@ if ~isempty(episodes)
                 epData.chan(cnt) = cfg.tmp.channel;
                 epData.onset(cnt) = cfg.tmp.detectedTime(epData.col{cnt}(1)); % episode onset in absolute time
                 epData.offset(cnt) = cfg.tmp.detectedTime(epData.col{cnt}(end)); % episode offset in absolute time
-                epData.snr(cnt) = episodes.SNR{e}(ind_epsd(i,1):ind_epsd(i,2));
+                epData.snr(cnt) = {episodes.SNR{e}(ind_epsd(i,1):ind_epsd(i,2))};
                 epData.snrMean(cnt) = nanmean(epData.snr{cnt});
                 % set all detected points to one in binary detected matrix
                 detected_new(sub2ind(size(TFR),epData.row{cnt},epData.col{cnt})) = 1;

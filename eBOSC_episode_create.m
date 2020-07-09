@@ -136,7 +136,7 @@ while sum(sum(detected_remaining)) > 0
         epData.col(j) = {single(y'-cfg.eBOSC.fstp)};
         epData.freq(j) = {single(cfg.eBOSC.F(epData.row{j}))};
         epData.freqMean(j) = single(avg_frq);
-        epData.amp(j) = {single(sqrt(TFR(sub2ind(size(TFR),epData.row{j},epData.col{j}))))}; % calculate sqrt here to get amplitudes
+        epData.amp(j) = {single(TFR(sub2ind(size(TFR),epData.row{j},epData.col{j})))};
         epData.ampMean(j) = nanmean(epData.amp{j});
         epData.durS(j) = single(length(y) ./ cfg.eBOSC.fsample);
         epData.durC(j) = epData.durS(j)*epData.freqMean(j);

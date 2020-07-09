@@ -194,5 +194,9 @@ for indTrial = 1:eBOSC.Ntrial
     % remove padding for detection (already done for eBOSC.episodes)
     eBOSC.detected1 = eBOSC.detected1(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample);
 
+    % Supplementary Plots:
 
+    figure; histogram(log10(eBOSC.episodes.SNRMean))
+    figure; histogram(log10(eBOSC.episodes.DurationC))
+    
 end; clear indTrial;
