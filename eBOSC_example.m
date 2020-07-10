@@ -12,6 +12,7 @@ pn.eBOSC = [fileparts(tmp.Filename), '/']; clear tmp;
 
 cd(pn.eBOSC)
 addpath(pn.eBOSC);
+addpath([pn.eBOSC, 'dev/']);
 addpath([pn.eBOSC, 'external/BOSC/']);
 addpath([pn.eBOSC, 'external/fieldtrip/']); ft_defaults;
 addpath([pn.eBOSC, 'external/NoiseTools/']);
@@ -19,9 +20,9 @@ addpath([pn.eBOSC, 'external/NoiseTools/']);
 %%  eBOSC parameters
 
 % general setup
-cfg.eBOSC.F                 = 2.^[1:.125:6];                            % frequency sampling (~Whitten et al., 2011), but higher frequency resolution
-cfg.eBOSC.wavenumber        = 6;                                        % wavelet family parameter (time-frequency tradeoff) [recommended: ~6]
-cfg.eBOSC.fsample           = 500;                                      % current sampling frequency of EEG data
+cfg.eBOSC.F                 = 2.^[1:.125:6];    % frequency sampling (~Whitten et al., 2011), but higher frequency resolution
+cfg.eBOSC.wavenumber        = 6;                % wavelet family parameter (time-frequency tradeoff) [recommended: ~6]
+cfg.eBOSC.fsample           = 500;              % current sampling frequency of EEG data
 
 % padding
 cfg.eBOSC.pad.tfr_s = 1;                                                                    % padding following wavelet transform to avoid edge artifacts in seconds (bi-lateral)
@@ -43,17 +44,16 @@ cfg.eBOSC.HighFreqExcludeBG = 15;                                       % higher
 cfg.eBOSC.fstp              = 1;
 
 % episode post-processing
-cfg.eBOSC.postproc.use      = 'yes';                                    % Post-processing of rhythmic eBOSC.episodes, i.e., wavelet 'deconvolution' (default = 'no')
-cfg.eBOSC.postproc.method   = 'MaxBias';                                % Deconvolution method (default = 'MaxBias', FWHM: 'FWHM')
-cfg.eBOSC.postproc.edgeOnly = 'no';                                     % Deconvolution only at on- and offsets of eBOSC.episodes? (default = 'yes')
-cfg.eBOSC.postproc.effSignal= 'PT';                                     % Amplitude deconvolution on whole signal or signal above power threshold? (default = 'PT')
+cfg.eBOSC.postproc.use      = 'yes';    % Post-processing of rhythmic eBOSC.episodes, i.e., wavelet 'deconvolution' (default = 'no')
+cfg.eBOSC.postproc.method   = 'FWHM';	% Deconvolution method (default = 'MaxBias', FWHM: 'FWHM')
+cfg.eBOSC.postproc.edgeOnly = 'yes';	% Deconvolution only at on- and offsets of eBOSC.episodes? (default = 'yes')
+cfg.eBOSC.postproc.effSignal= 'PT';     % Amplitude deconvolution on whole signal or signal above power threshold? (default = 'PT')
 
 %% load data
 
 load([pn.eBOSC,  'util/1160_rest_EEG_Rlm_Fhl_rdSeg_Art_EC.mat'], 'data')
 
 %% concatenate trials for resting state here
-% TO DO: check whether this is reasonable, as it introduces hard cuts
 
 data.trial{1} = cat(2,data.trial{:}); data.trial(2:end) = [];
 data.time{1} = cat(2,data.time{:}); data.time(2:end) = [];
@@ -132,7 +132,15 @@ eBOSC.static.mp(e,:)            = mp;
 % statistical power threshold
 eBOSC.static.pt(e,:)            = pt;
 
-%% TO DO: implement IRASA for background estimation
+% Supplementary Figure: plot estimated background + power threshold
+figure; hold on;
+plot(log10(cfg.eBOSC.F), log10(eBOSC.static.mp(e,:)), 'k--','LineWidth', 1.5); 
+plot(log10(cfg.eBOSC.F), log10(eBOSC.static.pt(e,:)), 'k-', 'LineWidth', 1.5)
+plot(log10(cfg.eBOSC.F),log10(eBOSC.static.bg_pow(e,:)), 'r-', 'LineWidth', 2)
+xlabel('Frequency (log10 Hz)'); ylabel('Power (log 10 a.u.)');
+legend({'Aperiodic fit', 'Statistical power threshold', 'Avg. spectrum'}, ...
+    'orientation', 'vertical', 'location', 'SouthWest'); legend('boxoff');
+set(findall(gcf,'-property','FontSize'),'FontSize',14)
 
 %% use statically-defined threshold for single-trial detection
 
@@ -141,7 +149,6 @@ for indTrial = 1:eBOSC.Ntrial
     % initialize variables
     eBOSC.pepisode{1,indTrial}(e,:)  = zeros(1,size(cfg.eBOSC.F,2));
     eBOSC.abundance{1,indTrial}(e,:) = zeros(1,size(cfg.eBOSC.F,2));
-    eBOSC.eBOSC.episodes{1,indTrial}{e,1}  = [];
         
     cfg.tmp.trial = indTrial; % encode current channel for later
 
@@ -181,22 +188,27 @@ for indTrial = 1:eBOSC.Ntrial
     %% create list of rhythmic eBOSC.episodes
 
     eBOSC.episodes = [];
-    [eBOSC.detected1,eBOSC.episodes] = eBOSC_episode_create(squeeze(TFR_),eBOSC, cfg);
+    [detected_ep,eBOSC.episodes] = eBOSC_episode_create(TFR_,eBOSC, cfg);
 
     % encode abundance of eBOSC.episodes (optional)
-    eBOSC.abundance_ep(a,c,k,:) = mean(eBOSC.detected1(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample),2);
+    eBOSC.abundance_ep(indTrial,:) = mean(detected_ep(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample),2);
 
     % Supplementary Plot: original eBOSC.detected vs. sparse episode power
     figure; 
-    subplot(121); imagesc(eBOSC.detected.*squeeze(TFR_));
-    subplot(122); imagesc(eBOSC.detected1.*squeeze(TFR_));
+    subplot(121); imagesc(eBOSC.detected.*TFR_);
+    subplot(122); imagesc(eBOSC.detected_ep.*TFR_);
     
     % remove padding for detection (already done for eBOSC.episodes)
-    eBOSC.detected1 = eBOSC.detected1(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample);
+    eBOSC.detected_ep(indTrial,:) = detected_ep(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample);
+    clear detected_ep;
 
     % Supplementary Plots:
 
-    figure; histogram(log10(eBOSC.episodes.SNRMean))
-    figure; histogram(log10(eBOSC.episodes.DurationC))
+    figure; 
+    subplot(3,2,1); histogram(eBOSC.episodes.SNRMean); title('SNR distribution')
+    subplot(3,2,2); histogram(log10(eBOSC.episodes.SNRMean)); title('SNR distribution(log10)')
+    subplot(3,2,3); histogram(eBOSC.episodes.DurationC); title('Duration distribution')
+    subplot(3,2,4); histogram(log10(eBOSC.episodes.DurationC)); title('Duration distribution(log10)')
+    subplot(3,2,5); histogram(eBOSC.episodes.FrequencyMean); title('Frequency distribution')
     
 end; clear indTrial;
