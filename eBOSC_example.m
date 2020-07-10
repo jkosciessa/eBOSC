@@ -35,10 +35,9 @@ cfg.eBOSC.pad.background_s = cfg.eBOSC.pad.tfr_s;                               
 cfg.eBOSC.pad.background_sample = cfg.eBOSC.pad.tfr_sample;
 
 % threshold settings
-cfg.eBOSC.ncyc              = repmat(3, 1, numel(cfg.eBOSC.F));         % vector of duration thresholds at each frequency
-cfg.eBOSC.percentile        = .95;                                      % percentile of background fit for power threshold
-cfg.eBOSC.LowFreqExcludeBG  = 8;                                        % lower bound of bandpass to be excluded prior to background fit
-cfg.eBOSC.HighFreqExcludeBG = 15;                                       % higher bound of bandpass to be excluded prior to background fit
+cfg.eBOSC.threshold.excludePeak = [8,15];                                   % lower and upper bound of frequencies to be excluded during background fit (Hz) (previously: LowFreqExcludeBG HighFreqExcludeBG)
+cfg.eBOSC.threshold.duration	= repmat(3, 1, numel(cfg.eBOSC.F));         % vector of duration thresholds at each frequency (previously: ncyc)
+cfg.eBOSC.threshold.percentile  = .95;                                      % percentile of background fit for power threshold
 
 % episode creation
 cfg.eBOSC.fstp              = 1;
@@ -95,7 +94,7 @@ end; clear indTrial
 
 %% eBOSC background: robust background power fit (2020 NeuroImage paper)
 
-[eBOSC] = eBOSC_getThresholds(cfg, TFR);
+[eBOSC, pt, dt] = eBOSC_getThresholds(cfg, TFR, e);
 
 % Supplementary Figure: plot estimated background + power threshold
 figure; hold on;

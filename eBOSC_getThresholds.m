@@ -1,4 +1,4 @@
-function [eBOSC] = eBOSC_getThresholds(cfg, TFR)
+function [eBOSC, pt, dt] = eBOSC_getThresholds(cfg, TFR, e)
 
     % average power estimates across periods of interest
     BG = [];
@@ -6,30 +6,40 @@ function [eBOSC] = eBOSC_getThresholds(cfg, TFR)
         % remove BGpad at beginning and end to avoid edge artifacts
         BG = [BG TFR.trial{indTrial}(:,cfg.eBOSC.pad.background_sample+1:end-cfg.eBOSC.pad.background_sample)];
     end; clear indTrial
-
-    % To DO: allow for NO peak removal, multiple peak removal
-
-    cfg.eBOSC.static.excludePeak = [5, 8; 20 30];
-
-    cfg.eBOSC.LowFreqExcludeBG = 
-
-    % find peak in specified range
-    freqInd1 = find(cfg.eBOSC.F >= cfg.eBOSC.LowFreqExcludeBG, 1, 'first');
-    freqInd2 = find(cfg.eBOSC.F <= cfg.eBOSC.HighFreqExcludeBG, 1, 'last');
-    [~, indPos] = max(mean(BG(freqInd1:freqInd2,:),2));
-    indPos = freqInd1+indPos;
-    % approximate wavelet extension in frequency domain
-    LowFreq = cfg.eBOSC.F(indPos)-(((2/cfg.eBOSC.wavenumber)*cfg.eBOSC.F(indPos))/2);
-    UpFreq = cfg.eBOSC.F(indPos)+(((2/cfg.eBOSC.wavenumber)*cfg.eBOSC.F(indPos))/2);
-    % remove power estimates within the following range from the fit
-    freqIndLow = find(cfg.eBOSC.F >= LowFreq, 1, 'first');
-    freqIndHigh = find(cfg.eBOSC.F <= UpFreq, 1, 'last');
+    
+    % if frequency ranges should be exluded to reduce the influence of
+    % rhythmic peaks on the estimation of the linear background, the
+    % following section removes these specified ranges
+    freqKeep = true(size(cfg.eBOSC.F));
+    if ~isempty(cfg.eBOSC.threshold.excludePeak) % allow for no peak removal
+        for indExFreq = 1:size(cfg.eBOSC.threshold.excludePeak,1) % allow for multiple peaks
+            % find empirical peak in specified range
+            freqInd1 = find(cfg.eBOSC.F >= cfg.eBOSC.threshold.excludePeak(indExFreq,1), 1, 'first');
+            freqInd2 = find(cfg.eBOSC.F <= cfg.eBOSC.threshold.excludePeak(indExFreq,2), 1, 'last');
+            [~, indPos] = max(mean(BG(freqInd1:freqInd2,:),2));
+            indPos = freqInd1+indPos;
+            % approximate wavelet extension in frequency domain
+            % note: we do not remove the specified range, but the FWHM
+            % around the empirical peak
+            LowFreq = cfg.eBOSC.F(indPos)-(((2/cfg.eBOSC.wavenumber)*cfg.eBOSC.F(indPos))/2);
+            UpFreq = cfg.eBOSC.F(indPos)+(((2/cfg.eBOSC.wavenumber)*cfg.eBOSC.F(indPos))/2);
+            % index power estimates within the above range to remove from BG fit
+            freqKeep(cfg.eBOSC.F >= LowFreq & cfg.eBOSC.F <= UpFreq) = 0;
+        end
+    end
+    fitInput.f_ = cfg.eBOSC.F(freqKeep);
+    fitInput.BG_ = BG(freqKeep, :);
+        
     % perform the robust linear fit, only including putatively aperiodic components (i.e., peak exclusion)
-    [pv,~] = eBOSC_bgfit_robust(cfg.eBOSC.F([1:freqIndLow-1 freqIndHigh+1:end]),BG([1:freqIndLow-1 freqIndHigh+1:end], :));
+    b = robustfit(log10(fitInput.f_),mean(log10(fitInput.BG_),2)'); clear fitInput;
+    pv(1) = b(2); pv(2) = b(1);
     mp = 10.^(polyval(pv,log10(cfg.eBOSC.F))); 
 
     % compute eBOSC power (pt) and duration (dt) thresholds: 
-    [pt,dt] = BOSC_thresholds(cfg.eBOSC.fsample,cfg.eBOSC.percentile,cfg.eBOSC.ncyc,cfg.eBOSC.F,mp);
+    % power threshold is based on a chi-square distribution with df=2 and mean as estimated above
+    pt=chi2inv(cfg.eBOSC.threshold.percentile,2)*mp/2; % chi2inv.m is part of the statistics toolbox of Matlab and Octave
+    % duration threshold is the specified number of cycles, so it scales with frequency
+    dt=(cfg.eBOSC.threshold.duration*cfg.eBOSC.fsample./cfg.eBOSC.F)';
 
     % save multiple time-invariant estimates that could be of interest:
     % overall wavelet power spectrum (NOT only background)
