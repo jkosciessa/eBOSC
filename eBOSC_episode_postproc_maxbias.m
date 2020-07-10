@@ -106,7 +106,7 @@ if ~isempty(episodes)
             % match to closest frequency
             [~, indF] = min(abs(cfg.eBOSC.F-avg_frq));
             % check number of data points to fulfill number of cycles criterion
-            num_pnt = floor((cfg.eBOSC.fsample ./ avg_frq) .* (cfg.eBOSC.ncyc(indF))); clear indF;
+            num_pnt = floor((cfg.eBOSC.fsample ./ avg_frq) .* (cfg.eBOSC.threshold.duration(indF))); clear indF;
             % if this duration criterion is still fulfilled, encode in table
             if num_pnt <= size(f_,2)
                 % exchange x and y with relevant info

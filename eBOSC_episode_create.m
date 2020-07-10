@@ -25,7 +25,7 @@ function [detected_new,episodesTable] = eBOSC_episode_create(TFR,eBOSC,cfg)
 %  Then it is checked whether the detected time-frequency points belong to
 %  a continuous episode for which (1) the frequency maximally changes by 
 %  +/- n steps (cfg.eBOSC.fstp) from on time point to the next and (2) that is at 
-%  least as long as n number of cycles (cfg.eBOSC.ncyc) of the average freqency
+%  least as long as n number of cycles (cfg.eBOSC.threshold.duration) of the average freqency
 %  of that episode (a priori duration threshold).
 %
 % Temporal leakage: The impact of the amplitude at each time point within a rhythmic episode on previous
@@ -128,7 +128,7 @@ while sum(sum(detected_remaining)) > 0
     % match to closest frequency
     [~, indF] = min(abs(cfg.eBOSC.F-avg_frq));
     % check number of data points to fulfill number of cycles criterion
-    num_pnt = floor((cfg.eBOSC.fsample ./ avg_frq) .* (cfg.eBOSC.ncyc(indF))); clear indF;
+    num_pnt = floor((cfg.eBOSC.fsample ./ avg_frq) .* (cfg.eBOSC.threshold.duration(indF))); clear indF;
     
     if length(y) >= num_pnt
 

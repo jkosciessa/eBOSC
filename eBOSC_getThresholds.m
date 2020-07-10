@@ -1,4 +1,4 @@
-function [eBOSC, pt, dt] = eBOSC_getThresholds(cfg, TFR, e)
+function [eBOSC, pt, dt] = eBOSC_getThresholds(cfg, TFR, eBOSC)
 
     % average power estimates across periods of interest
     BG = [];
@@ -43,14 +43,14 @@ function [eBOSC, pt, dt] = eBOSC_getThresholds(cfg, TFR, e)
 
     % save multiple time-invariant estimates that could be of interest:
     % overall wavelet power spectrum (NOT only background)
-    eBOSC.static.bg_pow(e,:)        = mean(BG(:,cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample),2);
+    eBOSC.static.bg_pow(cfg.tmp.channel,:)        = mean(BG(:,cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample),2);
     % log10-transformed wavelet power spectrum (NOT only background)
-    eBOSC.static.bg_log10_pow(e,:)  = mean(log10(BG(:,cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample)),2);
+    eBOSC.static.bg_log10_pow(cfg.tmp.channel,:)  = mean(log10(BG(:,cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample)),2);
     % intercept and slope parameters of the robust linear 1/f fit (log-log)
-    eBOSC.static.pv(e,:)            = pv;
+    eBOSC.static.pv(cfg.tmp.channel,:)            = pv;
     % linear background power at each estimated frequency
-    eBOSC.static.mp(e,:)            = mp;
+    eBOSC.static.mp(cfg.tmp.channel,:)            = mp;
     % statistical power threshold
-    eBOSC.static.pt(e,:)            = pt;
+    eBOSC.static.pt(cfg.tmp.channel,:)            = pt;
 
 end

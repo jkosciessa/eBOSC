@@ -17,12 +17,12 @@ addpath([pn.eBOSC, 'external/BOSC/']);
 addpath([pn.eBOSC, 'external/fieldtrip/']); ft_defaults;
 addpath([pn.eBOSC, 'external/NoiseTools/']);
 
-%%  eBOSC parameters
+%% eBOSC parameters
 
 % general setup
-cfg.eBOSC.F                 = 2.^[1:.125:6];    % frequency sampling (~Whitten et al., 2011), but higher frequency resolution
-cfg.eBOSC.wavenumber        = 6;                % wavelet family parameter (time-frequency tradeoff) [recommended: ~6]
-cfg.eBOSC.fsample           = 500;              % current sampling frequency of EEG data
+cfg.eBOSC.F             = 2.^[1:.125:6];    % frequency sampling (~Whitten et al., 2011), but higher frequency resolution
+cfg.eBOSC.wavenumber	= 6;                % wavelet family parameter (time-frequency tradeoff) [recommended: ~6]
+cfg.eBOSC.fsample       = 500;              % current sampling frequency of EEG data
 
 % padding
 cfg.eBOSC.pad.tfr_s = 1;                                                                    % padding following wavelet transform to avoid edge artifacts in seconds (bi-lateral)
@@ -40,7 +40,7 @@ cfg.eBOSC.threshold.duration	= repmat(3, 1, numel(cfg.eBOSC.F));         % vecto
 cfg.eBOSC.threshold.percentile  = .95;                                      % percentile of background fit for power threshold
 
 % episode creation
-cfg.eBOSC.fstp              = 1;
+cfg.eBOSC.fstp = 1;
 
 % episode post-processing
 cfg.eBOSC.postproc.use      = 'yes';    % Post-processing of rhythmic eBOSC.episodes, i.e., wavelet 'deconvolution' (default = 'no')
@@ -94,7 +94,7 @@ end; clear indTrial
 
 %% eBOSC background: robust background power fit (2020 NeuroImage paper)
 
-[eBOSC, pt, dt] = eBOSC_getThresholds(cfg, TFR, e);
+[eBOSC, pt, dt] = eBOSC_getThresholds(cfg, TFR, eBOSC);
 
 % Supplementary Figure: plot estimated background + power threshold
 figure; hold on;
@@ -109,10 +109,6 @@ set(findall(gcf,'-property','FontSize'),'FontSize',14)
 %% use statically-defined threshold for single-trial detection
 
 for indTrial = 1:eBOSC.Ntrial
-
-    % initialize variables
-    eBOSC.pepisode{1,indTrial}(e,:)  = zeros(1,size(cfg.eBOSC.F,2));
-    eBOSC.abundance{1,indTrial}(e,:) = zeros(1,size(cfg.eBOSC.F,2));
         
     cfg.tmp.trial = indTrial; % encode current channel for later
 
@@ -133,13 +129,16 @@ for indTrial = 1:eBOSC.Ntrial
         eBOSC.detected(f,:) = BOSC_detect(TFR_(f,:),pt(f),dt(f),cfg.eBOSC.fsample);
     end; clear f
 
+    % encode pepisode of detected rhythms (optional)
+    eBOSC.pepisode(indTrial,:) = mean(eBOSC.detected(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample),2);
+    
     % encode eBOSC.detected alpha signals (optional)
     alphaDetected = zeros(1,size(eBOSC.detected,2));
     alphaDetected(nanmean(eBOSC.detected(cfg.eBOSC.F > 8 & cfg.eBOSC.F < 12,:),1)>0) = 1;
-    eBOSC.detectedAlpha(e,:) = alphaDetected;
+    eBOSC.detectedAlpha(e,:) = alphaDetected(1,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample);
 
     % encode original signals (optional)
-    origData = data.trial{1}(e, cfg.eBOSC.pad.tfr_sample+1:end-cfg.eBOSC.pad.tfr_sample);
+    origData = data.trial{1}(e, cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample);
     eBOSC.origData(e,:) = origData;
 
     % Supplementary Plot: plot only rhythmic eBOSC.episodes
