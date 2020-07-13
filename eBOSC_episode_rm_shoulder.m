@@ -37,28 +37,30 @@ function [episodes] = eBOSC_episode_rm_shoulder(cfg,detected1,episodes)
         episodes.Amplitude{j}(ex) = [];
         episodes.Frequency{j}(ex) = [];
         episodes.SNR{j}(ex) = [];
+        % if nothing remains of episode: track for later deletion
+        if isempty(episodes.ColID{j})
+            rmv(cnt,1) = j;
+            cnt = cnt + 1;
+            % skip further encoding to avoid problems
+            continue;
+        end
         % shift onset according to padding
         % Important: new col index is indexing w.r.t. to matrix AFTER
         % detected padding is removed!
-        episodes.ColID{j} = tmp_col - ind1 + 1;
+        episodes.ColID{j} = episodes.ColID{j} - ind1 + 1;
         % WIP: episodes{j,1}(:,2) = episodes.ColID{j}
         % re-compute mean frequency
         episodes.FrequencyMean(j) = mean(episodes.Frequency{j});
         % re-compute mean amplitude
         episodes.AmplitudeMean(j) = mean(episodes.Amplitude{j});
         % re-compute mean SNR
-        episodes.SNRMean(j) = nanmean(epData.SNR{j});
+        episodes.SNRMean(j) = nanmean(episodes.SNR{j});
         % re-compute duration
         episodes.DurationS(j) = size(episodes{j,1},1) / cfg.eBOSC.fsample; clear ex
         episodes.DurationC(j) = episodes.DurationS(j)*episodes.FrequencyMean(j);
         % update absolute on-/offsets
         episodes.Onset(j) = cfg.tmp.finalTime(episodes.ColID{j}(1)); % episode onset in absolute time
         episodes.Offset(j) = cfg.tmp.finalTime(episodes.ColID{j}(end)); % episode offset in absolute time
-        % if nothing remains of episode: track for later deletion
-        if isempty(episodes.ColID{j})
-            rmv(cnt,1) = j;
-            cnt = cnt + 1;
-        end
     end; clear j cnt
     % remove now empty episodes from table    
     episodes(rmv,:) = []; clear rmv
