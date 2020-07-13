@@ -11,7 +11,7 @@ if ~isempty(episodes)
     for e = 1:size(episodes,1)
         
         % get temporary frequency vector
-        f_ = episodes.Frequency{e};
+        f_ = episodes.Frequency{e}';
         f_unique = unique(f_);
         f_ind_unique = find(ismember(cfg.eBOSC.F', f_unique', 'rows'));
 
@@ -107,7 +107,7 @@ if ~isempty(episodes)
                 % update all data in table with new episode limits
                 epData.row(cnt) = {episodes.RowID{e}(ind_epsd(i,1):ind_epsd(i,2))};
                 epData.col(cnt) = {episodes.ColID{e}(ind_epsd(i,1):ind_epsd(i,2))};
-                epData.freq(cnt) = {f_(ind_epsd(i,1):ind_epsd(i,2))};
+                epData.freq(cnt) = {f_(ind_epsd(i,1):ind_epsd(i,2))'};
                 epData.freqMean(cnt) = single(avg_frq);
                 epData.amp(cnt) = {a_(ind_epsd(i,1):ind_epsd(i,2))};
                 epData.ampMean(cnt) = nanmean(epData.amp{cnt});

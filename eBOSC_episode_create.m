@@ -15,7 +15,7 @@
 %
 %    Copyright 2018 Julian Q. Kosciessa, Thomas H. Grandy, Douglas D. Garrett & Markus Werkle-Bergner.
 
-function [detected_new,episodesTable] = eBOSC_episode_create(TFR,eBOSC,cfg)
+function [detected_new,episodesTable] = eBOSC_episode_create(TFR,eBOSC,cfg,detected)
 
 % This function creates continuous rhythmic "episodes" and attempts to control for the impact of wavelet parameters.
 %  Time-frequency points that best represent neural rhythms are identified by
@@ -75,10 +75,11 @@ function [detected_new,episodesTable] = eBOSC_episode_create(TFR,eBOSC,cfg)
 % formula and apply half of the BP repsonse on top of the center frequency.
 % Because of log-scaling, the widths are not the same on both sides.
 
-detected = eBOSC.detected; % get detected from eBOSC structure
 detected = eBOSC_episode_sparsefreq(cfg, detected, TFR);
 
 %%  Create continuous rhythmic episodes
+
+cfg.eBOSC.fstp = 1; % define step size in adjacency matrix
 
 % add zeros
 detected_remaining        = [zeros(cfg.eBOSC.fstp,size(detected,2)); detected; zeros(cfg.eBOSC.fstp,size(detected,2))];
@@ -134,7 +135,7 @@ while sum(sum(detected_remaining)) > 0
 
         epData.row(j) = {single(x'-cfg.eBOSC.fstp)};
         epData.col(j) = {single(y'-cfg.eBOSC.fstp)};
-        epData.freq(j) = {single(cfg.eBOSC.F(epData.row{j}))};
+        epData.freq(j) = {single(cfg.eBOSC.F(epData.row{j}))'};
         epData.freqMean(j) = single(avg_frq);
         epData.amp(j) = {single(TFR(sub2ind(size(TFR),epData.row{j},epData.col{j})))};
         epData.ampMean(j) = nanmean(epData.amp{j});
