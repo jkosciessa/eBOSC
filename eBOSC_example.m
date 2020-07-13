@@ -14,8 +14,8 @@ cd(pn.eBOSC)
 addpath(pn.eBOSC);
 addpath([pn.eBOSC, 'dev/']);
 addpath([pn.eBOSC, 'external/BOSC/']);
-addpath([pn.eBOSC, 'external/fieldtrip/']); ft_defaults;
-addpath([pn.eBOSC, 'external/NoiseTools/']);
+% addpath([pn.eBOSC, 'external/fieldtrip/']); ft_defaults;
+% addpath([pn.eBOSC, 'external/NoiseTools/']);
 
 %% eBOSC parameters
 
@@ -39,14 +39,11 @@ cfg.eBOSC.threshold.excludePeak = [8,15];                                   % lo
 cfg.eBOSC.threshold.duration	= repmat(3, 1, numel(cfg.eBOSC.F));         % vector of duration thresholds at each frequency (previously: ncyc)
 cfg.eBOSC.threshold.percentile  = .95;                                      % percentile of background fit for power threshold
 
-% episode creation
-cfg.eBOSC.fstp = 1;
-
 % episode post-processing
-cfg.eBOSC.postproc.use      = 'yes';    % Post-processing of rhythmic eBOSC.episodes, i.e., wavelet 'deconvolution' (default = 'no')
-cfg.eBOSC.postproc.method   = 'FWHM';	% Deconvolution method (default = 'MaxBias', FWHM: 'FWHM')
-cfg.eBOSC.postproc.edgeOnly = 'yes';	% Deconvolution only at on- and offsets of eBOSC.episodes? (default = 'yes')
-cfg.eBOSC.postproc.effSignal= 'PT';     % Amplitude deconvolution on whole signal or signal above power threshold? (default = 'PT')
+cfg.eBOSC.postproc.use      = 'no';         % Post-processing of rhythmic eBOSC.episodes, i.e., wavelet 'deconvolution' (default = 'no')
+cfg.eBOSC.postproc.method   = 'MaxBias';	% Deconvolution method (default = 'MaxBias', FWHM: 'FWHM')
+cfg.eBOSC.postproc.edgeOnly = 'yes';        % Deconvolution only at on- and offsets of eBOSC.episodes? (default = 'yes')
+cfg.eBOSC.postproc.effSignal= 'PT';         % Amplitude deconvolution on whole signal or signal above power threshold? (default = 'PT')
 
 %% load data
 
@@ -58,27 +55,21 @@ data.trial{1} = cat(2,data.trial{:}); data.trial(2:end) = [];
 data.time{1} = cat(2,data.time{:}); data.time(2:end) = [];
 data = rmfield(data, 'sampleinfo');
 
+%% initialize eBOSC output structure
+
+eBOSC = [];
+
 %% ---- select a channel here
 
 e = 60;
 display(['channel #' num2str(e)])
-
-%% TO DO: include the following in 'dedicated' eBOSC function
-
-% initialize eBOSC output structure
-
-eBOSC = [];
-
-% -----------------------------
-% TO DO: include fieldtrip-style automatic detection of dimord
-% -----------------------------
 
 cfg.tmp.inputTime = data.time{1,1};
 cfg.tmp.detectedTime = cfg.tmp.inputTime(cfg.eBOSC.pad.tfr_sample+1:end-cfg.eBOSC.pad.tfr_sample);
 cfg.tmp.finalTime = cfg.tmp.inputTime(cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample);
 cfg.tmp.channel = e; % encode current channel for later
 
-%% TF analysis for whole signal to prepare background fit
+%% Step 1: time-frequency wavelet decomposition for whole signal to prepare background fit
 
 eBOSC.Ntrial = length(data.trial);
 
@@ -92,7 +83,7 @@ for indTrial = 1:eBOSC.Ntrial
     clear tmp_dat
 end; clear indTrial
 
-%% eBOSC background: robust background power fit (2020 NeuroImage paper)
+%% Step 2: robust background power fit (see 2020 NeuroImage paper)
 
 [eBOSC, pt, dt] = eBOSC_getThresholds(cfg, TFR, eBOSC);
 
@@ -104,13 +95,14 @@ plot(log10(cfg.eBOSC.F),log10(eBOSC.static.bg_pow(e,:)), 'r-', 'LineWidth', 2)
 xlabel('Frequency (log10 Hz)'); ylabel('Power (log 10 a.u.)');
 legend({'Aperiodic fit', 'Statistical power threshold', 'Avg. spectrum'}, ...
     'orientation', 'vertical', 'location', 'SouthWest'); legend('boxoff');
-set(findall(gcf,'-property','FontSize'),'FontSize',14)
+set(findall(gcf,'-property','FontSize'),'FontSize',20)
+xlim([.3, 1.75])
 
-%% use statically-defined threshold for single-trial detection
+%% application of thresholds to single trials
 
 for indTrial = 1:eBOSC.Ntrial
         
-    cfg.tmp.trial = indTrial; % encode current channel for later
+    cfg.tmp.trial = indTrial; % encode current trial for later
 
     % get wavelet transform for single trial
     % WLpadding is removed to avoid edge artifacts during the
@@ -119,59 +111,81 @@ for indTrial = 1:eBOSC.Ntrial
     % fulfill the numcycles criterion.
     TFR_ = TFR.trial{1,indTrial}(:,cfg.eBOSC.pad.tfr_sample+1:end-cfg.eBOSC.pad.tfr_sample);
 
-%%  Detect rhythms + calculate Pepisode (~standard BOSC)
+    %% Step 3: detect rhythms and calculate Pepisode
 
     % The next section applies both the power and the optional duration
     % threshold to detect individual rhythmic segments in the continuous signals.
 
-    eBOSC.detected = zeros(size(TFR_));
+    detected = zeros(size(TFR_));
     for f = 1:length(cfg.eBOSC.F)
-        eBOSC.detected(f,:) = BOSC_detect(TFR_(f,:),pt(f),dt(f),cfg.eBOSC.fsample);
+        detected(f,:) = BOSC_detect(TFR_(f,:),pt(f),dt(f),cfg.eBOSC.fsample);
     end; clear f
 
-    % encode pepisode of detected rhythms (optional)
-    eBOSC.pepisode(indTrial,:) = mean(eBOSC.detected(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample),2);
+    % remove padding for detection (matrix with padding required for refinement)
+    eBOSC.detected(indTrial,:,:) = detected(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample);
+    curDetected = squeeze(eBOSC.detected(indTrial,:,:));
     
-    % encode eBOSC.detected alpha signals (optional)
-    alphaDetected = zeros(1,size(eBOSC.detected,2));
-    alphaDetected(nanmean(eBOSC.detected(cfg.eBOSC.F > 8 & cfg.eBOSC.F < 12,:),1)>0) = 1;
-    eBOSC.detectedAlpha(e,:) = alphaDetected(1,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample);
+    % encode pepisode of detected rhythms (optional)
+    eBOSC.pepisode(indTrial,:) = mean(curDetected,2);
+    
+    % encode detected alpha signals (optional)
+    alphaDetected = zeros(1,size(curDetected,2));
+    alphaDetected(nanmean(curDetected(cfg.eBOSC.F > 8 & cfg.eBOSC.F < 15,:),1)>0) = 1;
+    eBOSC.detectedAlpha(indTrial,:) = alphaDetected;
 
     % encode original signals (optional)
-    origData = data.trial{1}(e, cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample);
-    eBOSC.origData(e,:) = origData;
+    origData = data.trial{indTrial}(e, cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample);
+    eBOSC.origData(indTrial,:) = origData;
 
-    % Supplementary Plot: plot only rhythmic eBOSC.episodes
-    figure; hold on; 
-    plot(eBOSC.origData(e,:));
-    tmpDetected = eBOSC.detectedAlpha; tmpDetected(tmpDetected==0) = NaN;
-    plot(eBOSC.origData(e,:).*tmpDetected(e,:));
+    % Supplementary Plot: plot only rhythmic episodes
+    h = figure('units','normalized','position',[.1 .1 .6 .3]);
+    hold on; 
+    plot(eBOSC.origData(indTrial,:), 'k');
+    tmpDetected = eBOSC.detectedAlpha(indTrial,:); tmpDetected(tmpDetected==0) = NaN;
+    plot(eBOSC.origData(indTrial,:).*tmpDetected, 'r');
     xlim([7.2, 7.9]*10^4)
-
-    %% create list of rhythmic eBOSC.episodes
+    xlabel('Time (s)'); ylabel('Amplitude [µV]');
+    legend({'Original signal'; 'Rhythmic signal'}, ...
+        'orientation', 'horizontal', 'location', 'north'); legend('boxoff')
+    set(findall(gcf,'-property','FontSize'),'FontSize',26)
+    
+    %% Step 4 (optional): create table of separate rhythmic episodes
 
     eBOSC.episodes = [];
-    [detected_ep,eBOSC.episodes] = eBOSC_episode_create(TFR_,eBOSC, cfg);
+    [detected_ep,eBOSC.episodes] = eBOSC_episode_create(TFR_,eBOSC, cfg, detected);
 
+    % remove padding for detection (already done for eBOSC.episodes)
+    eBOSC.detected_ep(indTrial,:,:) = detected_ep(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample);
+    clear detected_ep;
+    
     % encode abundance of eBOSC.episodes (optional)
-    eBOSC.abundance_ep(indTrial,:) = mean(detected_ep(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample),2);
-
+    eBOSC.abundance_ep(indTrial,:) = mean(squeeze(eBOSC.detected_ep(indTrial,:,:)),2);
+    
     % Supplementary Plot: original eBOSC.detected vs. sparse episode power
     figure; 
-    subplot(121); imagesc(eBOSC.detected.*TFR_);
-    subplot(122); imagesc(eBOSC.detected_ep.*TFR_);
+    subplot(121); imagesc(squeeze(eBOSC.detected).*TFR_(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample));
+    subplot(122); imagesc(squeeze(eBOSC.detected_ep).*TFR_(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample));
     
-    % remove padding for detection (already done for eBOSC.episodes)
-    eBOSC.detected_ep(indTrial,:) = detected_ep(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample);
-    clear detected_ep;
-
-    % Supplementary Plots:
-
+    % Supplementary Plots: different statistics
     figure; 
     subplot(3,2,1); histogram(eBOSC.episodes.SNRMean); title('SNR distribution')
     subplot(3,2,2); histogram(log10(eBOSC.episodes.SNRMean)); title('SNR distribution(log10)')
     subplot(3,2,3); histogram(eBOSC.episodes.DurationC); title('Duration distribution')
     subplot(3,2,4); histogram(log10(eBOSC.episodes.DurationC)); title('Duration distribution(log10)')
     subplot(3,2,5); histogram(eBOSC.episodes.FrequencyMean); title('Frequency distribution')
+    subplot(3,2,6); hold on; plot(squeeze(eBOSC.pepisode(indTrial,:))); plot(squeeze(eBOSC.abundance_ep(indTrial,:))); title('Pepisode, abundance')
+    
+    % encode detected alpha signals (optional)
+    curDetected = squeeze(eBOSC.detected_ep(indTrial,:,:));
+    alphaDetected = zeros(1,size(curDetected,2));
+    alphaDetected(nanmean(curDetected(cfg.eBOSC.F > 8 & cfg.eBOSC.F < 15,:),1)>0) = 1;
+    eBOSC.detectedAlpha_ep(indTrial,:) = alphaDetected;
+
+    % Supplementary Plot: plot only rhythmic episodes
+    figure; hold on; 
+    plot(eBOSC.origData(indTrial,:), 'k');
+    tmpDetected = eBOSC.detectedAlpha_ep(indTrial,:); tmpDetected(tmpDetected==0) = NaN;
+    plot(eBOSC.origData(indTrial,:).*tmpDetected, 'r');
+    xlim([7.2, 7.9]*10^4)
     
 end; clear indTrial;
