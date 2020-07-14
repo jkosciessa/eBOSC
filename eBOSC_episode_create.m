@@ -190,4 +190,10 @@ if ~isempty(episodesTable)
     [episodesTable] = eBOSC_episode_rm_shoulder(cfg,detected_new,episodesTable);
 end
 
+%% if an episode list already exists, append results
+
+if isfield(eBOSC, 'episodes')
+    episodesTable = cat(1,eBOSC.episodes, episodesTable);
+end
+
 end
