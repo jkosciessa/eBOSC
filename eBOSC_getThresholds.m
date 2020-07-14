@@ -2,9 +2,9 @@ function [eBOSC, pt, dt] = eBOSC_getThresholds(cfg, TFR, eBOSC)
 
     % average power estimates across periods of interest
     BG = [];
-    for indTrial = 1:eBOSC.Ntrial
+    for indTrial = 1:numel(cfg.eBOSC.trial_background)
         % remove BGpad at beginning and end to avoid edge artifacts
-        BG = [BG TFR.trial{indTrial}(:,cfg.eBOSC.pad.background_sample+1:end-cfg.eBOSC.pad.background_sample)];
+        BG = [BG TFR.trial{cfg.eBOSC.trial_background(indTrial)}(:,cfg.eBOSC.pad.background_sample+1:end-cfg.eBOSC.pad.background_sample)];
     end; clear indTrial
     
     % if frequency ranges should be exluded to reduce the influence of
