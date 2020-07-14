@@ -47,7 +47,7 @@ cfg.eBOSC.postproc.effSignal= 'PT';         % Amplitude deconvolution on whole s
 
 %% load data
 
-load([pn.eBOSC,  'util/1160_rest_EEG_Rlm_Fhl_rdSeg_Art_EC.mat'], 'data')
+load([pn.eBOSC,  'util/1160_rest_EEG_Rlm_Fhl_rdSeg_Art_EO.mat'], 'data')
 
 %% concatenate trials for resting state here
 
@@ -61,7 +61,7 @@ eBOSC = [];
 
 %% ---- select a channel here
 
-e = 20;
+e = 60;
 display(['channel #' num2str(e)])
 
 cfg.tmp.inputTime = data.time{1,1};
@@ -196,15 +196,11 @@ for indTrial = 1:eBOSC.Ntrial
     
     exampleAlphaOnsetTime = []; exampleAlphaOnset = [];
     for indEp = 1:numel(idx_alpha)
+        % These are two alternative ways to extract the onset timepoint
+        % from the table
         idx_onsetTime(indEp) = find(cfg.tmp.finalTime>= eBOSC.episodes.Onset(idx_alpha(indEp)), 1, 'first');
         idx_onset(indEp) = eBOSC.episodes.ColID{idx_alpha(indEp)}(1);
-        % encode in matrix
-        %exampleAlphaOnsetTime(indEp, :) = data.trial{indTrial}(e,idx_onsetTime(indEp)-500:idx_onsetTime(indEp)+500);
-        %exampleAlphaOnset(indEp, :) = eBOSC.origData(indTrial,idx_onset:idx_onset+500);
     end
-
-    figure; imagesc(exampleAlphaOnset)
-    figure; plot(exampleAlphaOnset')
 
     % Supplementary Plot: plot only rhythmic episodes
     figure; hold on; 
@@ -216,6 +212,5 @@ for indTrial = 1:eBOSC.Ntrial
     OnsetLine(idx_onset) = 100;
     plot(OnsetLine, 'g')
     xlim([7.2, 7.9]*10^4)
-    
     
 end; clear indTrial;
