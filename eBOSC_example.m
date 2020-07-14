@@ -61,7 +61,7 @@ eBOSC = [];
 
 %% ---- select a channel here
 
-e = 60;
+e = 20;
 display(['channel #' num2str(e)])
 
 cfg.tmp.inputTime = data.time{1,1};
@@ -187,5 +187,35 @@ for indTrial = 1:eBOSC.Ntrial
     tmpDetected = eBOSC.detectedAlpha_ep(indTrial,:); tmpDetected(tmpDetected==0) = NaN;
     plot(eBOSC.origData(indTrial,:).*tmpDetected, 'r');
     xlim([7.2, 7.9]*10^4)
+    
+    % plot example of onsets for alpha signals
+    
+    % filter for alpha
+    
+    idx_alpha = find(eBOSC.episodes.FrequencyMean > 8 & eBOSC.episodes.FrequencyMean <15);
+    
+    exampleAlphaOnsetTime = []; exampleAlphaOnset = [];
+    for indEp = 1:numel(idx_alpha)
+        idx_onsetTime(indEp) = find(cfg.tmp.finalTime>= eBOSC.episodes.Onset(idx_alpha(indEp)), 1, 'first');
+        idx_onset(indEp) = eBOSC.episodes.ColID{idx_alpha(indEp)}(1);
+        % encode in matrix
+        %exampleAlphaOnsetTime(indEp, :) = data.trial{indTrial}(e,idx_onsetTime(indEp)-500:idx_onsetTime(indEp)+500);
+        %exampleAlphaOnset(indEp, :) = eBOSC.origData(indTrial,idx_onset:idx_onset+500);
+    end
+
+    figure; imagesc(exampleAlphaOnset)
+    figure; plot(exampleAlphaOnset')
+
+    % Supplementary Plot: plot only rhythmic episodes
+    figure; hold on; 
+    plot(eBOSC.origData(indTrial,:), 'k');
+    tmpDetected = eBOSC.detectedAlpha_ep(indTrial,:); tmpDetected(tmpDetected==0) = NaN;
+    plot(eBOSC.origData(indTrial,:).*tmpDetected, 'r');
+    scatter(idx_onset, repmat(100,1,numel(idx_onset)), 'filled')
+    OnsetLine = zeros(size(eBOSC.origData(indTrial,:)));
+    OnsetLine(idx_onset) = 100;
+    plot(OnsetLine, 'g')
+    xlim([7.2, 7.9]*10^4)
+    
     
 end; clear indTrial;
