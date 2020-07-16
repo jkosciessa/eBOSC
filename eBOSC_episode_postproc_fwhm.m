@@ -1,3 +1,20 @@
+%    This file is part of the extended Better OSCillation detection (eBOSC) library.
+%
+%    The eBOSC library is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    The eBOSC library is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+%
+%    Copyright 2020 Julian Q. Kosciessa, Thomas H. Grandy, Douglas D. Garrett & Markus Werkle-Bergner
+
 function [episodes_new, detected_new] = eBOSC_episode_postproc_fwhm(episodes,cfg, TFR)
 
 % re-initialize detected_new (for post-proc results)
@@ -114,7 +131,7 @@ if ~isempty(episodes)
                 epData.durS(cnt) = single(length(epData.amp{cnt}) ./ cfg.eBOSC.fsample);
                 epData.durC(cnt) = epData.durS(cnt)*epData.freqMean(cnt);
                 epData.trial(cnt) = cfg.tmp.trial;
-                epData.chan(cnt) = cfg.tmp.channel;
+                epData.chan(cnt) = cfg.eBOSC.channel(cfg.tmp.channel);
                 epData.onset(cnt) = cfg.tmp.detectedTime(epData.col{cnt}(1)); % episode onset in absolute time
                 epData.offset(cnt) = cfg.tmp.detectedTime(epData.col{cnt}(end)); % episode offset in absolute time
                 epData.snr(cnt) = {episodes.SNR{e}(ind_epsd(i,1):ind_epsd(i,2))};

@@ -120,7 +120,7 @@ if ~isempty(episodes)
                 epData.durS(cnt) = single(length(epData.amp{cnt}) ./ cfg.eBOSC.fsample);
                 epData.durC(cnt) = epData.durS(cnt)*epData.freqMean(cnt);
                 epData.trial(cnt) = cfg.tmp.trial;
-                epData.chan(cnt) = cfg.tmp.channel;
+                epData.chan(cnt) = cfg.eBOSC.channel(cfg.tmp.channel);
                 epData.onset(cnt) = cfg.tmp.detectedTime(epData.col{cnt}(1)); % episode onset in absolute time
                 epData.offset(cnt) = cfg.tmp.detectedTime(epData.col{cnt}(end)); % episode offset in absolute time
                 epData.snr(cnt) = {episodes.SNR{e}(ind_epsd(i,1):ind_epsd(i,2))};

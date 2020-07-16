@@ -1,10 +1,27 @@
+%    This file is part of the extended Better OSCillation detection (eBOSC) library.
+%
+%    The eBOSC library is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    The eBOSC library is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+%
+%    Copyright 2020 Julian Q. Kosciessa, Thomas H. Grandy, Douglas D. Garrett & Markus Werkle-Bergner
+
 function [eBOSC, pt, dt] = eBOSC_getThresholds(cfg, TFR, eBOSC)
 
     % average power estimates across periods of interest
     BG = [];
-    for indTrial = 1:eBOSC.Ntrial
+    for indTrial = 1:numel(cfg.eBOSC.trial_background)
         % remove BGpad at beginning and end to avoid edge artifacts
-        BG = [BG TFR.trial{indTrial}(:,cfg.eBOSC.pad.background_sample+1:end-cfg.eBOSC.pad.background_sample)];
+        BG = [BG TFR.trial{cfg.eBOSC.trial_background(indTrial)}(:,cfg.eBOSC.pad.background_sample+1:end-cfg.eBOSC.pad.background_sample)];
     end; clear indTrial
     
     % if frequency ranges should be exluded to reduce the influence of
@@ -43,14 +60,14 @@ function [eBOSC, pt, dt] = eBOSC_getThresholds(cfg, TFR, eBOSC)
 
     % save multiple time-invariant estimates that could be of interest:
     % overall wavelet power spectrum (NOT only background)
-    eBOSC.static.bg_pow(cfg.tmp.channel,:)        = mean(BG(:,cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample),2);
+    eBOSC.static.bg_pow(cfg.tmp.channel(1),:)        = mean(BG(:,cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample),2);
     % log10-transformed wavelet power spectrum (NOT only background)
-    eBOSC.static.bg_log10_pow(cfg.tmp.channel,:)  = mean(log10(BG(:,cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample)),2);
+    eBOSC.static.bg_log10_pow(cfg.tmp.channel(1),:)  = mean(log10(BG(:,cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample)),2);
     % intercept and slope parameters of the robust linear 1/f fit (log-log)
-    eBOSC.static.pv(cfg.tmp.channel,:)            = pv;
+    eBOSC.static.pv(cfg.tmp.channel(1),:)            = pv;
     % linear background power at each estimated frequency
-    eBOSC.static.mp(cfg.tmp.channel,:)            = mp;
+    eBOSC.static.mp(cfg.tmp.channel(1),:)            = mp;
     % statistical power threshold
-    eBOSC.static.pt(cfg.tmp.channel,:)            = pt;
+    eBOSC.static.pt(cfg.tmp.channel(1),:)            = pt;
 
 end
