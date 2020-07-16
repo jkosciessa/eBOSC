@@ -20,8 +20,8 @@ addpath([pn.eBOSC, 'external/BOSC/']);
 %% eBOSC parameters
 
 % general setup
-cfg.eBOSC.F             = 2.^[1:.125:6];    % frequency sampling (~Whitten et al., 2011), but higher frequency resolution
-cfg.eBOSC.wavenumber	= 6;                % wavelet family parameter (time-frequency tradeoff) [recommended: ~6]
+cfg.eBOSC.F             = 2.^[1:.125:6];    % frequency sampling
+cfg.eBOSC.wavenumber	= 6;                % wavelet family parameter (time-frequency tradeoff)
 cfg.eBOSC.fsample       = 500;              % current sampling frequency of EEG data
 
 % padding
@@ -72,9 +72,9 @@ disp(['Results are for trial ', num2str(cfg.eBOSC.trial(indTrial)), ' at channel
 
 % Supplementary Figure: plot estimated background + power threshold
 figure; hold on;
-plot(log10(cfg.eBOSC.F), log10(eBOSC.static.mp(cfg.eBOSC.channel(indChan),:)), 'k--','LineWidth', 1.5); 
-plot(log10(cfg.eBOSC.F), log10(eBOSC.static.pt(cfg.eBOSC.channel(indChan),:)), 'k-', 'LineWidth', 1.5)
-plot(log10(cfg.eBOSC.F),log10(eBOSC.static.bg_pow(cfg.eBOSC.channel(indChan),:)), 'r-', 'LineWidth', 2)
+plot(log10(cfg.eBOSC.F), log10(eBOSC.static.mp(indChan,:)), 'k--','LineWidth', 1.5); 
+plot(log10(cfg.eBOSC.F), log10(eBOSC.static.pt(indChan,:)), 'k-', 'LineWidth', 1.5)
+plot(log10(cfg.eBOSC.F),log10(eBOSC.static.bg_pow(indChan,:)), 'r-', 'LineWidth', 2)
 xlabel('Frequency (log10 Hz)'); ylabel('Power (log 10 a.u.)');
 legend({'Aperiodic fit', 'Statistical power threshold', 'Avg. spectrum'}, ...
     'orientation', 'vertical', 'location', 'SouthWest'); legend('boxoff');
@@ -107,8 +107,7 @@ idx_alpha = find(eBOSC.episodes.Trial == indTrial & eBOSC.episodes.Channel == cf
     eBOSC.episodes.FrequencyMean > 8 & eBOSC.episodes.FrequencyMean <15); % filter for alpha
 idx_onset = []; idx_onsetTime = [];
 for indEp = 1:numel(idx_alpha)
-    % These are two alternative ways to extract the onset timepoint
-    % from the table
+    % These are two alternative ways to extract the onset timepoint from the table
     idx_onsetTime(indEp) = find(cfg.tmp.finalTime>= eBOSC.episodes.Onset(idx_alpha(indEp)), 1, 'first');
     idx_onset(indEp) = eBOSC.episodes.ColID{idx_alpha(indEp)}(1);
 end

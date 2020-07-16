@@ -142,10 +142,10 @@ while sum(sum(detected_remaining)) > 0
         epData.durS(j) = single(length(y) ./ cfg.eBOSC.fsample);
         epData.durC(j) = epData.durS(j)*epData.freqMean(j);
         epData.trial(j) = cfg.tmp.trial;
-        epData.chan(j) = cfg.tmp.channel;
+        epData.chan(j) = cfg.tmp.channel(2);
         epData.onset(j) = cfg.tmp.detectedTime(epData.col{j}(1)); % episode onset in absolute time
         epData.offset(j) = cfg.tmp.detectedTime(epData.col{j}(end)); % episode offset in absolute time
-        epData.snr(j) = {sqrt(epData.amp{j})./eBOSC.static.mp(cfg.tmp.channel,epData.row{j})'}; % extract (static) background power at frequencies
+        epData.snr(j) = {sqrt(epData.amp{j})./eBOSC.static.mp(cfg.tmp.channel(1),epData.row{j})'}; % extract (static) background power at frequencies
         epData.snrMean(j) = nanmean(epData.snr{j});
         
         for l = 1:length(y)
@@ -174,7 +174,7 @@ end; clear varNames
 
 %%  Exclude temporal amplitude "leakage" due to wavelet smearing
 
-cfg.tmp.pt = eBOSC.static.pt(cfg.tmp.channel,:); % temporarily pass on power threshold 
+cfg.tmp.pt = eBOSC.static.pt(cfg.tmp.channel(1),:); % temporarily pass on power threshold 
 
 if strcmp(cfg.eBOSC.postproc.use, 'yes') && exist('epData', 'var') % only do this if there are any episodes to fine-tune
     if strcmp(cfg.eBOSC.postproc.method, 'FWHM')

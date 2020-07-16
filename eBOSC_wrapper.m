@@ -22,7 +22,7 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
         cfg.tmp.inputTime = data.time{1,1};
         cfg.tmp.detectedTime = cfg.tmp.inputTime(cfg.eBOSC.pad.tfr_sample+1:end-cfg.eBOSC.pad.tfr_sample);
         cfg.tmp.finalTime = cfg.tmp.inputTime(cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample);
-        cfg.tmp.channel = e; % encode current channel for later
+        cfg.tmp.channel = [indChan, e]; % encode current channel for later
 
         %% Step 1: time-frequency wavelet decomposition for whole signal to prepare background fit
 
