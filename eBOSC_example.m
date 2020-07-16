@@ -131,3 +131,15 @@ set(findall(gcf,'-property','FontSize'),'FontSize',26)
 % General note: the above onset display is not expected to be perfect as an episode with a
 % mean frequency within the requested range could have some time points
 % falling out of that range.
+
+%% optional: delete unnecessary fields prior to saving
+
+% The 'detected matrices' encode binary matrices incl. every time point. As
+% such, they may grow large in size. If those are not necessary for later
+% analysis, they can be removed here.
+
+eBOSC = rmfield(eBOSC, 'detected');
+eBOSC = rmfield(eBOSC, 'detected_ep');
+
+% Additionally, it makes sense to save the cfg for later reference.
+eBOSC.cfg = cfg;
