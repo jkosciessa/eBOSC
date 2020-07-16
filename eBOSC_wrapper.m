@@ -51,17 +51,12 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
     
         display(['Channel ',num2str(indChan), '/', num2str(numel(cfg.eBOSC.channel)),': chanID ', num2str(cfg.eBOSC.channel(indChan))])
 
-        cfg.tmp.inputTime = data.time{1,1};
-        cfg.tmp.detectedTime = cfg.tmp.inputTime(cfg.eBOSC.pad.tfr_sample+1:end-cfg.eBOSC.pad.tfr_sample);
-        cfg.tmp.finalTime = cfg.tmp.inputTime(cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample);
-        cfg.tmp.channel = indChan; % encode current channel for later
-
         %% Step 1: time-frequency wavelet decomposition for whole signal to prepare background fit
 
         TFR = [];
         for indTrial = 1:numel(cfg.eBOSC.trial)
             % get data
-            tmp_dat = data.trial{indTrial}(cfg.eBOSC.channel(indChan),:);
+            tmp_dat = data.trial{cfg.eBOSC.trial(indTrial)}(cfg.eBOSC.channel(indChan),:);
             % wavelet transform (NOTE: no check to avoid spectral leakage);
             % apply correction factor
             TFR.trial{indTrial} = BOSC_tf(tmp_dat,cfg.eBOSC.F,cfg.eBOSC.fsample,cfg.eBOSC.wavenumber);
@@ -83,7 +78,7 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
             % transform. Note that a padding fpr detection remains attached so that there
             % is no problems with too few sample points at the edges to
             % fulfill the numcycles criterion.
-            TFR_ = TFR.trial{1,indTrial}(:,cfg.eBOSC.pad.tfr_sample+1:end-cfg.eBOSC.pad.tfr_sample);
+            TFR_ = TFR.trial{indTrial}(:,cfg.eBOSC.pad.tfr_sample+1:end-cfg.eBOSC.pad.tfr_sample);
 
             %% Step 3: detect rhythms and calculate Pepisode
 
@@ -103,6 +98,11 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
             
             %% Step 4 (optional): create table of separate rhythmic episodes
 
+            cfg.tmp.inputTime = data.time{cfg.tmp.trial};
+            cfg.tmp.detectedTime = cfg.tmp.inputTime(cfg.eBOSC.pad.tfr_sample+1:end-cfg.eBOSC.pad.tfr_sample);
+            cfg.tmp.finalTime = cfg.tmp.inputTime(cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample);
+            cfg.tmp.channel = indChan; % encode current channel for later
+            
             [eBOSC.episodes, detected_ep] = eBOSC_episode_create(cfg,TFR_,detected,eBOSC);
             
             % remove padding for detection (already done for eBOSC.episodes)

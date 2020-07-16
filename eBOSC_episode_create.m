@@ -42,7 +42,7 @@ function [episodesTable, detected_new] = eBOSC_episode_create(cfg,TFR,detected,e
 %  Output:  
 %           detected_new    | new detected matrix with frequency leakage removed
 %           episodesTable   | table with specific episode information:
-%                 Trial: trial index
+%                 Trial: trial index (corresponds to cfg.eBOSC.trial)
 %                 Channel: channel index
 %                 FrequencyMean: mean frequency of episode (Hz)
 %                 DurationS: episode duration (in sec)

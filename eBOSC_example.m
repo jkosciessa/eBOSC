@@ -23,7 +23,7 @@ cfg.eBOSC.wavenumber	= 6;                % wavelet family parameter (time-freque
 cfg.eBOSC.fsample       = 500;              % current sampling frequency of EEG data
 
 % padding
-cfg.eBOSC.pad.tfr_s = 1;                                                                    % padding following wavelet transform to avoid edge artifacts in seconds (bi-lateral)
+cfg.eBOSC.pad.tfr_s = .5;                                                                    % padding following wavelet transform to avoid edge artifacts in seconds (bi-lateral)
 cfg.eBOSC.pad.tfr_sample = cfg.eBOSC.pad.tfr_s.*cfg.eBOSC.fsample;                          % automatic sample rate calculation
 cfg.eBOSC.pad.detection_s = .5;                                                             % padding following rhythm detection in seconds (bi-lateral); 'shoulder' for BOSC eBOSC.detected matrix to account for duration threshold
 cfg.eBOSC.pad.detection_sample = cfg.eBOSC.pad.detection_s.*cfg.eBOSC.fsample;              % automatic sample rate calculation
@@ -45,8 +45,8 @@ cfg.eBOSC.postproc.effSignal= 'PT';         % Amplitude deconvolution on whole s
 
 % general processing settings
 cfg.eBOSC.channel = [58:59]; % select channels (default: all)
-cfg.eBOSC.trial = [1]; % select trials (default: all)
-cfg.eBOSC.trial_background = [1]; % select trials for background (default: all)
+cfg.eBOSC.trial = []; % select trials (default: all)
+cfg.eBOSC.trial_background = []; % select trials for background (default: all)
 
 %% load data
 
@@ -54,8 +54,8 @@ load([pn.eBOSC,  'util/1160_rest_EEG_Rlm_Fhl_rdSeg_Art_EC.mat'], 'data')
 
 %% concatenate trials for resting state here
 
-data.trial{1} = cat(2,data.trial{:}); data.trial(2:end) = [];
-data.time{1} = cat(2,data.time{:}); data.time(2:end) = [];
+% data.trial{1} = cat(2,data.trial{:}); data.trial(2:end) = [];
+% data.time{1} = cat(2,data.time{:}); data.time(2:end) = [];
 data = rmfield(data, 'sampleinfo');
 
 %% run eBOSC
@@ -64,7 +64,7 @@ data = rmfield(data, 'sampleinfo');
 
 %% multiple figures as visual sanity-checks
 
-indChan = 1; indTrial = 1;
+indChan = 1; indTrial = 1; % Here we select the first trial and first channel we encoded (see cfg.eBOSC.channel).
 
 disp(['Results are for trial ', num2str(cfg.eBOSC.trial(indTrial)), ' at channel ', data.label{cfg.eBOSC.channel(indChan)}])
 
