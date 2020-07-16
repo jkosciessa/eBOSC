@@ -43,7 +43,7 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
     if isempty(cfg.eBOSC.trial)
         cfg.eBOSC.trial = 1:numel(data.trial);
     end
-    if isempty(cfg.eBOSC.trial)
+    if isempty(cfg.eBOSC.trial_background)
         cfg.eBOSC.trial_background = 1:numel(data.trial);
     end
 
