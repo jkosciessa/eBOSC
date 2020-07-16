@@ -86,12 +86,6 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
             % encode abundance of eBOSC.episodes (optional)
             eBOSC.abundance_ep(indChan, indTrial,:) = mean(squeeze(eBOSC.detected_ep(indChan, indTrial,:,:)),2);
 
-            % encode detected alpha signals (optional)
-            curDetected = squeeze(eBOSC.detected_ep(indChan, indTrial,:,:));
-            alphaDetected = zeros(1,size(curDetected,2));
-            alphaDetected(nanmean(curDetected(cfg.eBOSC.F > 8 & cfg.eBOSC.F < 15,:),1)>0) = 1;
-            eBOSC.detectedAlpha_ep(indChan, indTrial,:) = alphaDetected;
-
 %           % Supplementary Plot: original eBOSC.detected vs. sparse episode power
 %           figure; 
 %           subplot(121); imagesc(squeeze(eBOSC.detected).*TFR_(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample));

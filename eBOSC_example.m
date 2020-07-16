@@ -46,13 +46,13 @@ cfg.eBOSC.postproc.edgeOnly = 'yes';        % Deconvolution only at on- and offs
 cfg.eBOSC.postproc.effSignal= 'PT';         % Amplitude deconvolution on whole signal or signal above power threshold? (default = 'PT')
 
 % general processing settings
-cfg.eBOSC.channel = [59]; % select channels (default: all)
+cfg.eBOSC.channel = [58:60]; % select channels (default: all)
 cfg.eBOSC.trial = [1]; % select trials (default: all)
 cfg.eBOSC.trial_background = [1]; % select trials for background (default: all)
 
 %% load data
 
-load([pn.eBOSC,  'util/1160_rest_EEG_Rlm_Fhl_rdSeg_Art_EO.mat'], 'data')
+load([pn.eBOSC,  'util/1160_rest_EEG_Rlm_Fhl_rdSeg_Art_EC.mat'], 'data')
 
 %% concatenate trials for resting state here
 
@@ -67,7 +67,8 @@ data = rmfield(data, 'sampleinfo');
 %% multiple figures as visual sanity-checks
 
 indChan = 1; indTrial = 1;
-% Note: indChan indexes the requested channel in cfg.eBOSC.channel
+
+disp(['Results are for trial ', num2str(cfg.eBOSC.trial(indTrial)), ' at channel ', data.label{cfg.eBOSC.channel(indChan)}])
 
 % Supplementary Figure: plot estimated background + power threshold
 figure; hold on;
@@ -101,8 +102,8 @@ subplot(3,2,4); histogram(log10(eBOSC.episodes.DurationC)); title('Duration dist
 subplot(3,2,5); histogram(eBOSC.episodes.FrequencyMean); title('Frequency distribution')
 subplot(3,2,6); hold on; plot(squeeze(eBOSC.pepisode(indChan, indTrial,:))); plot(squeeze(eBOSC.abundance_ep(indChan, indTrial,:))); title('Pepisode, abundance')
 
-% Supplementary Plot: plot rhythmic episodes with indicated onsets (here across the two channels)
-idx_alpha = find(eBOSC.episodes.Trial == indTrial & eBOSC.episodes.Channel == indChan &...
+% Supplementary Plot: plot rhythmic episodes with indicated onsets
+idx_alpha = find(eBOSC.episodes.Trial == indTrial & eBOSC.episodes.Channel == cfg.eBOSC.channel(indChan) &...
     eBOSC.episodes.FrequencyMean > 8 & eBOSC.episodes.FrequencyMean <15); % filter for alpha
 idx_onset = []; idx_onsetTime = [];
 for indEp = 1:numel(idx_alpha)
@@ -117,7 +118,10 @@ OnsetLine = zeros(size(squeeze(eBOSC.origData(indChan, indTrial,:))));
 OnsetLine(idx_onset) = 100;
 plot(OnsetLine, 'g')
 [orig]=plot(squeeze(eBOSC.origData(indChan, indTrial,:)), 'k');
-tmpDetected = squeeze(eBOSC.detectedAlpha_ep(indChan, indTrial,:)); tmpDetected(tmpDetected==0) = NaN;
+ % encode detected alpha signals
+alphaDetected = zeros(size(eBOSC.detected_ep,1),size(eBOSC.detected_ep,2),size(eBOSC.detected_ep,4));
+alphaDetected(nanmean(eBOSC.detected_ep(:,:,cfg.eBOSC.F > 8 & cfg.eBOSC.F < 15,:),3)>0) = 1;
+tmpDetected = squeeze(alphaDetected(indChan, indTrial,:)); tmpDetected(tmpDetected==0) = NaN;
 [rhythm]=plot(squeeze(eBOSC.origData(indChan, indTrial,:)).*tmpDetected, 'r');
 xlim([7.2, 7.9]*10^4)
 xlabel('Time (s)'); ylabel('Amplitude [µV]');
