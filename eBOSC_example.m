@@ -36,7 +36,7 @@ cfg.eBOSC.pad.background_sample = cfg.eBOSC.pad.tfr_sample;
 
 % threshold settings
 cfg.eBOSC.threshold.excludePeak = [8,15];                                   % lower and upper bound of frequencies to be excluded during background fit (Hz) (previously: LowFreqExcludeBG HighFreqExcludeBG)
-cfg.eBOSC.threshold.duration	= repmat(0, 1, numel(cfg.eBOSC.F));         % vector of duration thresholds at each frequency (previously: ncyc)
+cfg.eBOSC.threshold.duration	= repmat(3, 1, numel(cfg.eBOSC.F));         % vector of duration thresholds at each frequency (previously: ncyc)
 cfg.eBOSC.threshold.percentile  = .95;                                      % percentile of background fit for power threshold
 
 % episode post-processing
@@ -46,7 +46,7 @@ cfg.eBOSC.postproc.edgeOnly = 'yes';        % Deconvolution only at on- and offs
 cfg.eBOSC.postproc.effSignal= 'PT';         % Amplitude deconvolution on whole signal or signal above power threshold? (default = 'PT')
 
 % general processing settings
-cfg.eBOSC.channel = [59,60]; % select channels (default: all)
+cfg.eBOSC.channel = [59]; % select channels (default: all)
 cfg.eBOSC.trial = [1]; % select trials (default: all)
 cfg.eBOSC.trial_background = [1]; % select trials for background (default: all)
 
@@ -66,11 +66,10 @@ data = rmfield(data, 'sampleinfo');
 
 %% multiple figures as visual sanity-checks
 
-% Supplementary Figure: plot estimated background + power threshold
-
 indChan = 1; indTrial = 1;
 % Note: indChan indexes the requested channel in cfg.eBOSC.channel
 
+% Supplementary Figure: plot estimated background + power threshold
 figure; hold on;
 plot(log10(cfg.eBOSC.F), log10(eBOSC.static.mp(cfg.eBOSC.channel(indChan),:)), 'k--','LineWidth', 1.5); 
 plot(log10(cfg.eBOSC.F), log10(eBOSC.static.pt(cfg.eBOSC.channel(indChan),:)), 'k-', 'LineWidth', 1.5)
@@ -81,11 +80,11 @@ legend({'Aperiodic fit', 'Statistical power threshold', 'Avg. spectrum'}, ...
 set(findall(gcf,'-property','FontSize'),'FontSize',20)
 xlim([.3, 1.75])
 
-% Supplementary Plot: plot only rhythmic episodes
+% Supplementary Plot: eBOSC's detected matrix: plot rhythmic alpha episodes
 h = figure('units','normalized','position',[.1 .1 .6 .3]);
 hold on; 
 plot(squeeze(eBOSC.origData(indChan, indTrial,:)), 'k');
-tmpDetected = squeeze(eBOSC.detectedAlpha(indChan, indTrial,:)); tmpDetected(tmpDetected==0) = NaN;
+tmpDetected = single(squeeze(nanmean(eBOSC.detected(indChan, indTrial,cfg.eBOSC.F > 8 & cfg.eBOSC.F < 15,:),3))>0); tmpDetected(tmpDetected==0) = NaN;
 plot(squeeze(eBOSC.origData(indChan, indTrial,:)).*tmpDetected, 'r');
 xlim([7.2, 7.9]*10^4)
 xlabel('Time (s)'); ylabel('Amplitude [µV]');
@@ -93,7 +92,7 @@ legend({'Original signal'; 'Rhythmic signal'}, ...
     'orientation', 'horizontal', 'location', 'north'); legend('boxoff')
 set(findall(gcf,'-property','FontSize'),'FontSize',26)
 
-% Supplementary Plots: different statistics
+% Supplementary Plots: different episode statistics
 figure; 
 subplot(3,2,1); histogram(eBOSC.episodes.SNRMean); title('SNR distribution')
 subplot(3,2,2); histogram(log10(eBOSC.episodes.SNRMean)); title('SNR distribution(log10)')
@@ -103,7 +102,9 @@ subplot(3,2,5); histogram(eBOSC.episodes.FrequencyMean); title('Frequency distri
 subplot(3,2,6); hold on; plot(squeeze(eBOSC.pepisode(indChan, indTrial,:))); plot(squeeze(eBOSC.abundance_ep(indChan, indTrial,:))); title('Pepisode, abundance')
 
 % Supplementary Plot: plot rhythmic episodes with indicated onsets (here across the two channels)
-idx_alpha = find(eBOSC.episodes.FrequencyMean > 8 & eBOSC.episodes.FrequencyMean <15); % filter for alpha
+idx_alpha = find(eBOSC.episodes.Trial == indTrial & eBOSC.episodes.Channel == indChan &...
+    eBOSC.episodes.FrequencyMean > 8 & eBOSC.episodes.FrequencyMean <15); % filter for alpha
+idx_onset = []; idx_onsetTime = [];
 for indEp = 1:numel(idx_alpha)
     % These are two alternative ways to extract the onset timepoint
     % from the table
@@ -115,10 +116,14 @@ scatter(idx_onset, repmat(100,1,numel(idx_onset)), 'filled')
 OnsetLine = zeros(size(squeeze(eBOSC.origData(indChan, indTrial,:))));
 OnsetLine(idx_onset) = 100;
 plot(OnsetLine, 'g')
-plot(squeeze(eBOSC.origData(indChan, indTrial,:)), 'k');
+[orig]=plot(squeeze(eBOSC.origData(indChan, indTrial,:)), 'k');
 tmpDetected = squeeze(eBOSC.detectedAlpha_ep(indChan, indTrial,:)); tmpDetected(tmpDetected==0) = NaN;
-plot(squeeze(eBOSC.origData(indChan, indTrial,:)).*tmpDetected, 'r');
+[rhythm]=plot(squeeze(eBOSC.origData(indChan, indTrial,:)).*tmpDetected, 'r');
 xlim([7.2, 7.9]*10^4)
+xlabel('Time (s)'); ylabel('Amplitude [µV]');
+legend([orig, rhythm], {'Original signal'; 'Rhythmic signal'}, ...
+    'orientation', 'horizontal', 'location', 'south'); legend('boxoff')
+set(findall(gcf,'-property','FontSize'),'FontSize',26)
 
 % General note: the above onset display is not expected to be perfect as an episode with a
 % mean frequency within the requested range could have some time points

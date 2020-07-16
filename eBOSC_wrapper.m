@@ -1,12 +1,23 @@
 function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
 
     eBOSC = [];
+    
+    % set some defaults for included channels and trials, if not specified
+    if isempty(cfg.eBOSC.channel)
+        cfg.eBOSC.channel = 1:numel(data.label);
+    end
+    if isempty(cfg.eBOSC.trial)
+        cfg.eBOSC.trial = 1:numel(data.trial);
+    end
+    if isempty(cfg.eBOSC.trial)
+        cfg.eBOSC.trial_background = 1:numel(data.trial);
+    end
 
     for indChan = 1: numel(cfg.eBOSC.channel)
     
         e = cfg.eBOSC.channel(indChan);
 
-        display(['Channel ',num2str(indChan)', '/', num2str(numel(cfg.eBOSC.channel)),': chanID ', num2str(e)])
+        display(['Channel ',num2str(indChan), '/', num2str(numel(cfg.eBOSC.channel)),': chanID ', num2str(e)])
 
         cfg.tmp.inputTime = data.time{1,1};
         cfg.tmp.detectedTime = cfg.tmp.inputTime(cfg.eBOSC.pad.tfr_sample+1:end-cfg.eBOSC.pad.tfr_sample);
@@ -56,15 +67,9 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
 
             % remove padding for detection (matrix with padding required for refinement)
             eBOSC.detected(indChan, indTrial,:,:) = detected(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample);
-            curDetected = squeeze(eBOSC.detected(indChan, indTrial,:,:));
 
             % encode pepisode of detected rhythms (optional)
-            eBOSC.pepisode(indChan, indTrial,:) = mean(curDetected,2);
-
-            % encode detected alpha signals (optional)
-            alphaDetected = zeros(1,size(curDetected,2));
-            alphaDetected(nanmean(curDetected(cfg.eBOSC.F > 8 & cfg.eBOSC.F < 15,:),1)>0) = 1;
-            eBOSC.detectedAlpha(indChan, indTrial,:) = alphaDetected;
+            eBOSC.pepisode(indChan, indTrial,:) = mean(eBOSC.detected(indChan, indTrial,:,:),4);
 
             % encode original signals (optional)
             origData = data.trial{indTrial}(e, cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample);
