@@ -41,12 +41,12 @@ cfg.eBOSC.threshold.percentile  = .95;                                      % pe
 
 % episode post-processing
 cfg.eBOSC.postproc.use      = 'no';         % Post-processing of rhythmic eBOSC.episodes, i.e., wavelet 'deconvolution' (default = 'no')
-cfg.eBOSC.postproc.method   = 'MaxBias';	% Deconvolution method (default = 'MaxBias', FWHM: 'FWHM')
+cfg.eBOSC.postproc.method   = 'FWHM';	% Deconvolution method (default = 'MaxBias', FWHM: 'FWHM')
 cfg.eBOSC.postproc.edgeOnly = 'yes';        % Deconvolution only at on- and offsets of eBOSC.episodes? (default = 'yes')
 cfg.eBOSC.postproc.effSignal= 'PT';         % Amplitude deconvolution on whole signal or signal above power threshold? (default = 'PT')
 
 % general processing settings
-cfg.eBOSC.channel = [58:60]; % select channels (default: all)
+cfg.eBOSC.channel = [58:59]; % select channels (default: all)
 cfg.eBOSC.trial = [1]; % select trials (default: all)
 cfg.eBOSC.trial_background = [1]; % select trials for background (default: all)
 
@@ -104,33 +104,29 @@ subplot(3,2,6); hold on; plot(squeeze(eBOSC.pepisode(indChan, indTrial,:))); plo
 
 % Supplementary Plot: plot rhythmic episodes with indicated onsets
 idx_alpha = find(eBOSC.episodes.Trial == indTrial & eBOSC.episodes.Channel == cfg.eBOSC.channel(indChan) &...
-    eBOSC.episodes.FrequencyMean > 8 & eBOSC.episodes.FrequencyMean <15); % filter for alpha
+    eBOSC.episodes.FrequencyMean > 8 & eBOSC.episodes.FrequencyMean <15);
+% filter for alpha by mean frequency (!) of episode
 idx_onset = []; idx_onsetTime = [];
+alphaDetected = NaN(1,size(eBOSC.origData,3));
 for indEp = 1:numel(idx_alpha)
     % These are two alternative ways to extract the onset timepoint from the table
     idx_onsetTime(indEp) = find(cfg.tmp.finalTime>= eBOSC.episodes.Onset(idx_alpha(indEp)), 1, 'first');
     idx_onset(indEp) = eBOSC.episodes.ColID{idx_alpha(indEp)}(1);
+    % Mark all periods with episodes falling into the alpha range
+    alphaDetected(eBOSC.episodes.ColID{idx_alpha(indEp)}) = 1;
 end
-figure; hold on; 
-scatter(idx_onset, repmat(100,1,numel(idx_onset)), 'filled')
-OnsetLine = zeros(size(squeeze(eBOSC.origData(indChan, indTrial,:))));
+h = figure('units','normalized','position',[.1 .1 .7 .3]); hold on; 
+scatter(idx_onset, repmat(100,1,numel(idx_onset)), 75, [.5 .5 .5], 'filled')
+OnsetLine = squeeze(eBOSC.origData(indChan, indTrial,:));
 OnsetLine(idx_onset) = 100;
-plot(OnsetLine, 'g')
+plot(OnsetLine, 'Color', [.5 .5 .5])
 [orig]=plot(squeeze(eBOSC.origData(indChan, indTrial,:)), 'k');
- % encode detected alpha signals
-alphaDetected = zeros(size(eBOSC.detected_ep,1),size(eBOSC.detected_ep,2),size(eBOSC.detected_ep,4));
-alphaDetected(nanmean(eBOSC.detected_ep(:,:,cfg.eBOSC.F > 8 & cfg.eBOSC.F < 15,:),3)>0) = 1;
-tmpDetected = squeeze(alphaDetected(indChan, indTrial,:)); tmpDetected(tmpDetected==0) = NaN;
-[rhythm]=plot(squeeze(eBOSC.origData(indChan, indTrial,:)).*tmpDetected, 'r');
+[rhythm]=plot(squeeze(eBOSC.origData(indChan, indTrial,:)).*alphaDetected', 'r');
 xlim([7.2, 7.9]*10^4)
 xlabel('Time (s)'); ylabel('Amplitude [µV]');
 legend([orig, rhythm], {'Original signal'; 'Rhythmic signal'}, ...
     'orientation', 'horizontal', 'location', 'south'); legend('boxoff')
 set(findall(gcf,'-property','FontSize'),'FontSize',26)
-
-% General note: the above onset display is not expected to be perfect as an episode with a
-% mean frequency within the requested range could have some time points
-% falling out of that range.
 
 %% optional: delete unnecessary fields prior to saving
 
@@ -140,6 +136,12 @@ set(findall(gcf,'-property','FontSize'),'FontSize',26)
 
 eBOSC = rmfield(eBOSC, 'detected');
 eBOSC = rmfield(eBOSC, 'detected_ep');
+
+%  If e.g., the column and row indices in the episode table are not needed,
+%  similarly delete them here.
+
+eBOSC.episodes.RowID = [];
+eBOSC.episodes.ColID = [];
 
 % Additionally, it makes sense to save the cfg for later reference.
 eBOSC.cfg = cfg;

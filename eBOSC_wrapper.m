@@ -15,23 +15,19 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
 
     for indChan = 1: numel(cfg.eBOSC.channel)
     
-        e = cfg.eBOSC.channel(indChan);
-
-        display(['Channel ',num2str(indChan), '/', num2str(numel(cfg.eBOSC.channel)),': chanID ', num2str(e)])
+        display(['Channel ',num2str(indChan), '/', num2str(numel(cfg.eBOSC.channel)),': chanID ', num2str(cfg.eBOSC.channel(indChan))])
 
         cfg.tmp.inputTime = data.time{1,1};
         cfg.tmp.detectedTime = cfg.tmp.inputTime(cfg.eBOSC.pad.tfr_sample+1:end-cfg.eBOSC.pad.tfr_sample);
         cfg.tmp.finalTime = cfg.tmp.inputTime(cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample);
-        cfg.tmp.channel = [indChan, e]; % encode current channel for later
+        cfg.tmp.channel = indChan; % encode current channel for later
 
         %% Step 1: time-frequency wavelet decomposition for whole signal to prepare background fit
 
-        eBOSC.Ntrial = length(cfg.eBOSC.trial);
-
         TFR = [];
-        for indTrial = 1:eBOSC.Ntrial
+        for indTrial = 1:numel(cfg.eBOSC.trial)
             % get data
-            tmp_dat = data.trial{indTrial}(e,:);
+            tmp_dat = data.trial{indTrial}(cfg.eBOSC.channel(indChan),:);
             % wavelet transform (NOTE: no check to avoid spectral leakage);
             % apply correction factor
             TFR.trial{indTrial} = BOSC_tf(tmp_dat,cfg.eBOSC.F,cfg.eBOSC.fsample,cfg.eBOSC.wavenumber);
@@ -72,7 +68,7 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
             eBOSC.pepisode(indChan, indTrial,:) = mean(eBOSC.detected(indChan, indTrial,:,:),4);
 
             % encode original signals (optional)
-            origData = data.trial{indTrial}(e, cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample);
+            origData = data.trial{indTrial}(cfg.eBOSC.channel(indChan), cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample);
             eBOSC.origData(indChan, indTrial,:) = origData;
             
             %% Step 4 (optional): create table of separate rhythmic episodes
