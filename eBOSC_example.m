@@ -14,8 +14,6 @@ cd(pn.eBOSC)
 addpath(pn.eBOSC);
 addpath([pn.eBOSC, 'dev/']);
 addpath([pn.eBOSC, 'external/BOSC/']);
-% addpath([pn.eBOSC, 'external/fieldtrip/']); ft_defaults;
-% addpath([pn.eBOSC, 'external/NoiseTools/']);
 
 %% eBOSC parameters
 
@@ -41,7 +39,7 @@ cfg.eBOSC.threshold.percentile  = .95;                                      % pe
 
 % episode post-processing
 cfg.eBOSC.postproc.use      = 'no';         % Post-processing of rhythmic eBOSC.episodes, i.e., wavelet 'deconvolution' (default = 'no')
-cfg.eBOSC.postproc.method   = 'FWHM';	% Deconvolution method (default = 'MaxBias', FWHM: 'FWHM')
+cfg.eBOSC.postproc.method   = 'MaxBias';	% Deconvolution method (default = 'MaxBias', FWHM: 'FWHM')
 cfg.eBOSC.postproc.edgeOnly = 'yes';        % Deconvolution only at on- and offsets of eBOSC.episodes? (default = 'yes')
 cfg.eBOSC.postproc.effSignal= 'PT';         % Amplitude deconvolution on whole signal or signal above power threshold? (default = 'PT')
 
@@ -70,6 +68,9 @@ indChan = 1; indTrial = 1;
 
 disp(['Results are for trial ', num2str(cfg.eBOSC.trial(indTrial)), ' at channel ', data.label{cfg.eBOSC.channel(indChan)}])
 
+% get original time series for plotting
+origData = data.trial{indTrial}(cfg.eBOSC.channel(indChan), cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample);
+
 % Supplementary Figure: plot estimated background + power threshold
 figure; hold on;
 plot(log10(cfg.eBOSC.F), log10(eBOSC.static.mp(indChan,:)), 'k--','LineWidth', 1.5); 
@@ -84,9 +85,9 @@ xlim([.3, 1.75])
 % Supplementary Plot: eBOSC's detected matrix: plot rhythmic alpha episodes
 h = figure('units','normalized','position',[.1 .1 .6 .3]);
 hold on; 
-plot(squeeze(eBOSC.origData(indChan, indTrial,:)), 'k');
+plot(squeeze(origData), 'k');
 tmpDetected = single(squeeze(nanmean(eBOSC.detected(indChan, indTrial,cfg.eBOSC.F > 8 & cfg.eBOSC.F < 15,:),3))>0); tmpDetected(tmpDetected==0) = NaN;
-plot(squeeze(eBOSC.origData(indChan, indTrial,:)).*tmpDetected, 'r');
+plot(squeeze(origData).*tmpDetected', 'r');
 xlim([7.2, 7.9]*10^4)
 xlabel('Time (s)'); ylabel('Amplitude [µV]');
 legend({'Original signal'; 'Rhythmic signal'}, ...
@@ -107,21 +108,21 @@ idx_alpha = find(eBOSC.episodes.Trial == indTrial & eBOSC.episodes.Channel == cf
     eBOSC.episodes.FrequencyMean > 8 & eBOSC.episodes.FrequencyMean <15);
 % filter for alpha by mean frequency (!) of episode
 idx_onset = []; idx_onsetTime = [];
-alphaDetected = NaN(1,size(eBOSC.origData,3));
+alphaDetected = NaN(1,numel(origData));
 for indEp = 1:numel(idx_alpha)
     % These are two alternative ways to extract the onset timepoint from the table
     idx_onsetTime(indEp) = find(cfg.tmp.finalTime>= eBOSC.episodes.Onset(idx_alpha(indEp)), 1, 'first');
     idx_onset(indEp) = eBOSC.episodes.ColID{idx_alpha(indEp)}(1);
     % Mark all periods with episodes falling into the alpha range
-    alphaDetected(eBOSC.episodes.ColID{idx_alpha(indEp)}) = 1;
-end
+    alphaDetected(eBOSC.episodes.ColID{idx_alpha(indEp)}(1):eBOSC.episodes.ColID{idx_alpha(indEp)}(end)) = 1;
+end; clear idx_alpha;
 h = figure('units','normalized','position',[.1 .1 .7 .3]); hold on; 
 scatter(idx_onset, repmat(100,1,numel(idx_onset)), 75, [.5 .5 .5], 'filled')
-OnsetLine = squeeze(eBOSC.origData(indChan, indTrial,:));
-OnsetLine(idx_onset) = 100;
-plot(OnsetLine, 'Color', [.5 .5 .5])
-[orig]=plot(squeeze(eBOSC.origData(indChan, indTrial,:)), 'k');
-[rhythm]=plot(squeeze(eBOSC.origData(indChan, indTrial,:)).*alphaDetected', 'r');
+OnsetLine = squeeze(origData);
+OnsetLine(idx_onset) = 100; clear idx_onset idx_onsetTime;
+plot(OnsetLine, 'Color', [.5 .5 .5]); clear OnsetLine;
+[orig]=plot(squeeze(origData), 'k');
+[rhythm]=plot(squeeze(origData).*alphaDetected, 'r');
 xlim([7.2, 7.9]*10^4)
 xlabel('Time (s)'); ylabel('Amplitude [µV]');
 legend([orig, rhythm], {'Original signal'; 'Rhythmic signal'}, ...

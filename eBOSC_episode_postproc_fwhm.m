@@ -15,7 +15,19 @@
 %
 %    Copyright 2020 Julian Q. Kosciessa, Thomas H. Grandy, Douglas D. Garrett & Markus Werkle-Bergner
 
-function [episodes_new, detected_new] = eBOSC_episode_postproc_fwhm(episodes,cfg, TFR)
+function [episodes_new, detected_new] = eBOSC_episode_postproc_fwhm(cfg, episodes, TFR)
+% This function performs post-processing of input episodes by checking
+% whether 'detected' time points can trivially be explained by the FWHM of
+% the wavelet used in the time-frequency transform.
+%
+% Inputs: 
+%           cfg | config structure with cfg.eBOSC field
+%           episodes | table of episodes
+%           TFR | time-frequency matrix
+%
+% Outputs: 
+%           episodes_new | updated table of episodes
+%           detected_new | updated binary detected matrix
 
 % re-initialize detected_new (for post-proc results)
 detected_new = zeros(size(TFR));
@@ -36,7 +48,7 @@ if ~isempty(episodes)
         a_ = episodes.Amplitude{e};
 
         % location in time with reference to matrix TFR
-        t_ind = episodes.ColID{e};
+        t_ind = episodes.ColID{e}(1):episodes.ColID{e}(end);
 
         % initiate bias matrix
         biasMat = [];
@@ -123,7 +135,7 @@ if ~isempty(episodes)
                 % exchange x and y with relevant info
                 % update all data in table with new episode limits
                 epData.row(cnt) = {episodes.RowID{e}(ind_epsd(i,1):ind_epsd(i,2))};
-                epData.col(cnt) = {episodes.ColID{e}(ind_epsd(i,1):ind_epsd(i,2))};
+                epData.col(cnt) = {[t_ind(ind_epsd(i,1)), t_ind(ind_epsd(i,2))]'};
                 epData.freq(cnt) = {f_(ind_epsd(i,1):ind_epsd(i,2))'};
                 epData.freqMean(cnt) = single(avg_frq);
                 epData.amp(cnt) = {a_(ind_epsd(i,1):ind_epsd(i,2))};
@@ -137,7 +149,7 @@ if ~isempty(episodes)
                 epData.snr(cnt) = {episodes.SNR{e}(ind_epsd(i,1):ind_epsd(i,2))};
                 epData.snrMean(cnt) = nanmean(epData.snr{cnt});
                 % set all detected points to one in binary detected matrix
-                detected_new(sub2ind(size(TFR),epData.row{cnt},epData.col{cnt})) = 1;
+                detected_new(sub2ind(size(TFR),epData.row{cnt},[epData.col{cnt}(1):epData.col{cnt}(2)]')) = 1;
                 % set counter
                 cnt = cnt + 1;
             end

@@ -1,4 +1,33 @@
-function [episodes_new, detected_new] = eBOSC_episode_postproc_maxbias(episodes,cfg, TFR)
+%    This file is part of the extended Better OSCillation detection (eBOSC) library.
+%
+%    The eBOSC library is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    The eBOSC library is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+%
+%    Copyright 2020 Julian Q. Kosciessa, Thomas H. Grandy, Douglas D. Garrett & Markus Werkle-Bergner
+
+function [episodes_new, detected_new] = eBOSC_episode_postproc_maxbias(cfg, episodes, TFR)
+% This function performs post-processing of input episodes by checking
+% whether 'detected' time points can be explained by the simulated extension of
+% the wavelet used in the time-frequency transform.
+%
+% Inputs: 
+%           cfg | config structure with cfg.eBOSC field
+%           episodes | table of episodes
+%           TFR | time-frequency matrix
+%
+% Outputs: 
+%           episodes_new | updated table of episodes
+%           detected_new | updated binary detected matrix
 
 % This method works as follows: we estimate the bias introduced by
 % wavelet convolution. The bias is represented by the amplitudes
@@ -53,6 +82,9 @@ if ~isempty(episodes)
         a_ = episodes.Amplitude{e};
 
         m_ = zeros(length(a_),length(a_));
+        
+        % location in time with reference to matrix TFR
+        t_ind = episodes.ColID{e}(1):episodes.ColID{e}(end);
 
         % indices of time points' frequencies within "bias" matrix
         f_vec = episodes.RowID{e};
@@ -112,7 +144,7 @@ if ~isempty(episodes)
                 % exchange x and y with relevant info
                 % update all data in table with new episode limits
                 epData.row(cnt) = {episodes.RowID{e}(ind_epsd(i,1):ind_epsd(i,2))};
-                epData.col(cnt) = {episodes.ColID{e}(ind_epsd(i,1):ind_epsd(i,2))};
+                epData.col(cnt) = {[t_ind(ind_epsd(i,1)), t_ind(ind_epsd(i,2))]'};
                 epData.freq(cnt) = {f_(ind_epsd(i,1):ind_epsd(i,2))'};
                 epData.freqMean(cnt) = single(avg_frq);
                 epData.amp(cnt) = {a_(ind_epsd(i,1):ind_epsd(i,2))};
@@ -126,7 +158,7 @@ if ~isempty(episodes)
                 epData.snr(cnt) = {episodes.SNR{e}(ind_epsd(i,1):ind_epsd(i,2))};
                 epData.snrMean(cnt) = nanmean(epData.snr{cnt});
                 % set all detected points to one in binary detected matrix
-                detected_new(sub2ind(size(TFR),epData.row{cnt},epData.col{cnt})) = 1;
+                detected_new(sub2ind(size(TFR),epData.row{cnt},[epData.col{cnt}(1):epData.col{cnt}(2)]')) = 1;
                 % set counter
                 cnt = cnt + 1;
             end

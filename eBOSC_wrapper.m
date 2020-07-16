@@ -1,4 +1,38 @@
 function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
+% Main eBOSC wrapper function. Executes eBOSC subfunctions.
+%
+% Inputs: 
+%           cfg | config structure with cfg.eBOSC field:
+%                     cfg.eBOSC.F                     | frequency sampling
+%                     cfg.eBOSC.wavenumber            | wavelet family parameter (time-frequency tradeoff)
+%                     cfg.eBOSC.fsample               | current sampling frequency of EEG data
+%                     cfg.eBOSC.pad.tfr_s             | padding following wavelet transform to avoid edge artifacts in seconds (bi-lateral)
+%                     cfg.eBOSC.pad.detection_s       | padding following rhythm detection in seconds (bi-lateral); 'shoulder' for BOSC eBOSC.detected matrix to account for duration threshold
+%                     cfg.eBOSC.pad.total_s           | complete padding (WL + shoulder)
+%                     cfg.eBOSC.pad.background_s      | padding of segments for BG (only avoiding edge artifacts)
+%                     cfg.eBOSC.threshold.excludePeak | lower and upper bound of frequencies to be excluded during background fit (Hz) (previously: LowFreqExcludeBG HighFreqExcludeBG)
+%                     cfg.eBOSC.threshold.duration	| vector of duration thresholds at each frequency (previously: ncyc)
+%                     cfg.eBOSC.threshold.percentile	| percentile of background fit for power threshold
+%                     cfg.eBOSC.postproc.use          | Post-processing of rhythmic eBOSC.episodes, i.e., wavelet 'deconvolution' (default = 'no')
+%                     cfg.eBOSC.postproc.method       | Deconvolution method (default = 'MaxBias', FWHM: 'FWHM')
+%                     cfg.eBOSC.postproc.edgeOnly     | Deconvolution only at on- and offsets of eBOSC.episodes? (default = 'yes')
+%                     cfg.eBOSC.postproc.effSignal	| Amplitude deconvolution on whole signal or signal above power threshold? (default = 'PT')
+%                     cfg.eBOSC.channel               | Subset of channels? (default: [] = all)
+%                     cfg.eBOSC.trial                 | Subset of trials? (default: [] = all)
+%                     cfg.eBOSC.trial_background      | Subset of trials for background? (default: [] = all)
+%           data | input time series data in FieldTrip format with:
+%                | .trial field: {trial}(channel x time)
+%                | .time field: {trial}(channel x time)
+%                | .label field: {channelName}
+%
+% Outputs: 
+%           eBOSC | main eBOSC output structure
+%               eBOSC.episodes | table of individual rhythmic episodes (see eBOSC_episode_create)
+%               eBOSC.detected | binary matrix of detected time-frequency points (prior to episode creation)
+%               eBOSC.pepisode | temporal average of detected rhythms (prior to episode creation)
+%               eBOSC.detected_ep | binary matrix of detected time-frequency points (following episode creation)
+%               eBOSC.abundance_ep | temporal average of detected rhythms (following episode creation)
+%           cfg | config structure
 
     eBOSC = [];
     
@@ -66,15 +100,11 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
 
             % encode pepisode of detected rhythms (optional)
             eBOSC.pepisode(indChan, indTrial,:) = mean(eBOSC.detected(indChan, indTrial,:,:),4);
-
-            % encode original signals (optional)
-            origData = data.trial{indTrial}(cfg.eBOSC.channel(indChan), cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample);
-            eBOSC.origData(indChan, indTrial,:) = origData;
             
             %% Step 4 (optional): create table of separate rhythmic episodes
 
-            [detected_ep,eBOSC.episodes] = eBOSC_episode_create(TFR_,eBOSC, cfg, detected);
-
+            [eBOSC.episodes, detected_ep] = eBOSC_episode_create(cfg,TFR_,detected,eBOSC);
+            
             % remove padding for detection (already done for eBOSC.episodes)
             eBOSC.detected_ep(indChan, indTrial,:,:) = detected_ep(:,cfg.eBOSC.pad.detection_sample+1:end-cfg.eBOSC.pad.detection_sample);
             clear detected_ep;

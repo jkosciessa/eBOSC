@@ -16,6 +16,24 @@
 %    Copyright 2020 Julian Q. Kosciessa, Thomas H. Grandy, Douglas D. Garrett & Markus Werkle-Bergner
 
 function [eBOSC, pt, dt] = eBOSC_getThresholds(cfg, TFR, eBOSC)
+% This function estimates the static duration and power thresholds and
+% saves information regarding the overall spectrum and background.
+%
+% Inputs: 
+%           cfg | config structure with cfg.eBOSC field
+%           TFR | time-frequency matrix
+%           eBOSC | main eBOSC output structure; will be updated
+%
+% Outputs: 
+%           eBOSC   | updated w.r.t. background info (see below)
+%                   | bg_pow: overall power spectrum
+%                   | bg_log10_pow: overall power spectrum (log10)
+%                   | pv: intercept and slope of fit
+%                   | mp: linear background power
+%                   | pt: power threshold
+%           pt | empirical power threshold
+%           dt | duration threshold
+
 
     % average power estimates across periods of interest
     BG = [];

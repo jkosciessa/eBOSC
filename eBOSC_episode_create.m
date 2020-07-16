@@ -15,7 +15,7 @@
 %
 %    Copyright 2020 Julian Q. Kosciessa, Thomas H. Grandy, Douglas D. Garrett & Markus Werkle-Bergner
 
-function [detected_new,episodesTable] = eBOSC_episode_create(TFR,eBOSC,cfg,detected)
+function [episodesTable, detected_new] = eBOSC_episode_create(cfg,TFR,detected,eBOSC)
 
 % This function creates continuous rhythmic "episodes" and attempts to control for the impact of wavelet parameters.
 %  Time-frequency points that best represent neural rhythms are identified by
@@ -32,26 +32,16 @@ function [detected_new,episodesTable] = eBOSC_episode_create(TFR,eBOSC,cfg,detec
 %  and following time points is tested with the goal to exclude supra-threshold time
 %  points that are due to the wavelet extension in time. 
 %
-%  input:   TFR      = time-frequency matrix (excl. WLpadding)
-%           detected = detected oscillations in TFR (based on power and duration threshold)
-%           cfg      - .eBOSC.F           = frequency resolution of TFR (log-scaled!)
-%                    - .eBOSC.fsample     = sampling frequency
-%                    - .eBOSC.wavenumber  = wavenumber in time-frequency analysis
-%                    - .eBOSC.npnts       = length of data (in data points)
-%                    - .eBOSC.fstp        = maximal step size of frequencies from one
-%                                     time point to the next (steps refer
-%                                     to vector entries in .F)
-%                    - .eBOSC.ncyc        = minimum number of cycles of the average 
-%                                     freqency of that segment
-%                    - .eBOSC.postproc.use; apply bias correction
-%                    - .eBOSC.postproc.method; method to use for bias correction; options: 'MaxBias', 'FWHM'; see Kosciessa et al. supplement for more infos
-%                    - .eBOSC.postproc.edgeOnly; correct for wavelet bias only at segment edges ('yes') or also within detected segments ('no')
-%                    - .eBOSC.postproc.effSignal; signal to base wavelet correaction on: 'all' - entire signal including background; 'PT' - only signal above the power threshold                
-%
-% No default exists for any of the parameters.
-%
-%  output:  detected_new = new detected matrix with frequency leakage removed
-%           episodesTable = table with specific episode information:
+%  Input:   
+%           cfg         | config structure with cfg.eBOSC field
+%           TFR         | time-frequency matrix (excl. WLpadding)
+%           detected    | detected oscillations in TFR (based on power and duration threshold)
+%           eBOSC       | main eBOSC output structure; necessary to read in
+%                           prior eBOSC.episodes if they exist in a loop
+
+%  Output:  
+%           detected_new    | new detected matrix with frequency leakage removed
+%           episodesTable   | table with specific episode information:
 %                 Trial: trial index
 %                 Channel: channel index
 %                 FrequencyMean: mean frequency of episode (Hz)
@@ -66,8 +56,6 @@ function [detected_new,episodesTable] = eBOSC_episode_create(TFR,eBOSC,cfg,detec
 %                 ColID: (cell) column index (time dimension)
 %                 SNR: (cell) time-resolved signal-to-noise ratio: momentary amplitude/static background estimate at channel*frequency
 %                 SNRMean: mean signal-to-noise ratio
-%
-% To DO: given that ColID is always continuous, simply encode on- and offsets
 
 %% Accounting for the frequency spread of the wavelet
 
@@ -134,10 +122,10 @@ while sum(sum(detected_remaining)) > 0
     if length(y) >= num_pnt
 
         epData.row(j) = {single(x'-cfg.eBOSC.fstp)};
-        epData.col(j) = {single(y'-cfg.eBOSC.fstp)};
+        epData.col(j) = {[single(y(1)-cfg.eBOSC.fstp), single(y(end)-cfg.eBOSC.fstp)]'};
         epData.freq(j) = {single(cfg.eBOSC.F(epData.row{j}))'};
         epData.freqMean(j) = single(avg_frq);
-        epData.amp(j) = {single(TFR(sub2ind(size(TFR),epData.row{j},epData.col{j})))};
+        epData.amp(j) = {single(TFR(sub2ind(size(TFR),epData.row{j},[epData.col{j}(1):epData.col{j}(2)]')))};
         epData.ampMean(j) = nanmean(epData.amp{j});
         epData.durS(j) = single(length(y) ./ cfg.eBOSC.fsample);
         epData.durC(j) = epData.durS(j)*epData.freqMean(j);
@@ -150,8 +138,9 @@ while sum(sum(detected_remaining)) > 0
         
         for l = 1:length(y)
             detected_remaining(x(l),y(l)) = 0;
-            detected_new(epData.row{j}(l),epData.col{j}(l)) = 1;
         end
+        % set all detected points to one in binary detected matrix
+        detected_new(sub2ind(size(TFR),epData.row{j},[epData.col{j}(1):epData.col{j}(2)]')) = 1;
         
         j = j + 1;
     else
@@ -178,9 +167,9 @@ cfg.tmp.pt = eBOSC.static.pt(cfg.tmp.channel,:); % temporarily pass on power thr
 
 if strcmp(cfg.eBOSC.postproc.use, 'yes') && exist('epData', 'var') % only do this if there are any episodes to fine-tune
     if strcmp(cfg.eBOSC.postproc.method, 'FWHM')
-        [episodesTable, detected_new] = eBOSC_episode_postproc_fwhm(episodesTable,cfg, TFR);
+        [episodesTable, detected_new] = eBOSC_episode_postproc_fwhm(cfg, episodesTable, TFR);
     elseif strcmp(cfg.eBOSC.postproc.method,'MaxBias')
-        [episodesTable, detected_new] = eBOSC_episode_postproc_maxbias(episodesTable,cfg, TFR);
+        [episodesTable, detected_new] = eBOSC_episode_postproc_maxbias(cfg, episodesTable, TFR);
     end
 end
     

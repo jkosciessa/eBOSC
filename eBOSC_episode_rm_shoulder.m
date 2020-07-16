@@ -28,17 +28,17 @@ function [episodes] = eBOSC_episode_rm_shoulder(cfg,detected1,episodes)
     rmv = [];
     for j = 1:size(episodes,1)
         % get time points of current episode
-        tmp_col = episodes.ColID{j};
+        tmp_col = episodes.ColID{j}(1):episodes.ColID{j}(2);
         % find time points that fall inside the padding (i.e. on- and offset)
         ex = find(tmp_col < ind1 | tmp_col > ind2);
         % remove padded time points from episodes
-        episodes.ColID{j}(ex) = [];
+        tmp_col(ex) = [];
         episodes.RowID{j}(ex) = [];
         episodes.Amplitude{j}(ex) = [];
         episodes.Frequency{j}(ex) = [];
         episodes.SNR{j}(ex) = [];
         % if nothing remains of episode: track for later deletion
-        if isempty(episodes.ColID{j})
+        if isempty(tmp_col)
             rmv(cnt,1) = j;
             cnt = cnt + 1;
             % skip further encoding to avoid problems
@@ -47,7 +47,8 @@ function [episodes] = eBOSC_episode_rm_shoulder(cfg,detected1,episodes)
         % shift onset according to padding
         % Important: new col index is indexing w.r.t. to matrix AFTER
         % detected padding is removed!
-        episodes.ColID{j} = episodes.ColID{j} - ind1 + 1;
+        tmp_col = tmp_col - ind1 + 1;
+        episodes.ColID{j} = [tmp_col(1), tmp_col(end)]';
         % WIP: episodes{j,1}(:,2) = episodes.ColID{j}
         % re-compute mean frequency
         episodes.FrequencyMean(j) = mean(episodes.Frequency{j});
