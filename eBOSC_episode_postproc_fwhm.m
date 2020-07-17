@@ -45,7 +45,7 @@ if ~isempty(episodes)
         f_ind_unique = find(ismember(cfg.eBOSC.F', f_unique', 'rows'));
 
         % get temporary amplitude vector
-        a_ = episodes.Amplitude{e};
+        a_ = episodes.Power{e};
 
         % location in time with reference to matrix TFR
         t_ind = episodes.ColID{e}(1):episodes.ColID{e}(end);
@@ -138,9 +138,9 @@ if ~isempty(episodes)
                 epData.col(cnt) = {[t_ind(ind_epsd(i,1)), t_ind(ind_epsd(i,2))]'};
                 epData.freq(cnt) = {f_(ind_epsd(i,1):ind_epsd(i,2))'};
                 epData.freqMean(cnt) = single(avg_frq);
-                epData.amp(cnt) = {a_(ind_epsd(i,1):ind_epsd(i,2))};
-                epData.ampMean(cnt) = nanmean(epData.amp{cnt});
-                epData.durS(cnt) = single(length(epData.amp{cnt}) ./ cfg.eBOSC.fsample);
+                epData.pow(cnt) = {a_(ind_epsd(i,1):ind_epsd(i,2))};
+                epData.powMean(cnt) = nanmean(epData.pow{cnt});
+                epData.durS(cnt) = single(length(epData.pow{cnt}) ./ cfg.eBOSC.fsample);
                 epData.durC(cnt) = epData.durS(cnt)*epData.freqMean(cnt);
                 epData.trial(cnt) = cfg.tmp.trial;
                 epData.chan(cnt) = cfg.eBOSC.channel(cfg.tmp.channel);
@@ -164,9 +164,9 @@ if ~isempty(episodes)
     end; clear e
     
     % prepare for the contingency that no episodes are created
-    varNames = {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID', 'SNR', 'SNRMean'};
+    varNames = {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'PowerMean', 'Onset', 'Offset', 'Power', 'Frequency', 'RowID', 'ColID', 'SNR', 'SNRMean'};
     if exist('epData', 'var')
-        episodes_new = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.row', epData.col', epData.snr', epData.snrMean',  ...
+        episodes_new = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.powMean', epData.onset', epData.offset', epData.pow', epData.freq', epData.row', epData.col', epData.snr', epData.snrMean',  ...
                 'VariableNames', varNames);
     else
         episodes_new  = cell2table(cell(0,numel(varNames)), 'VariableNames', varNames);

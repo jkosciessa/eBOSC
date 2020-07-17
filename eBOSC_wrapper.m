@@ -16,7 +16,7 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
 %                     cfg.eBOSC.postproc.use          | Post-processing of rhythmic eBOSC.episodes, i.e., wavelet 'deconvolution' (default = 'no')
 %                     cfg.eBOSC.postproc.method       | Deconvolution method (default = 'MaxBias', FWHM: 'FWHM')
 %                     cfg.eBOSC.postproc.edgeOnly     | Deconvolution only at on- and offsets of eBOSC.episodes? (default = 'yes')
-%                     cfg.eBOSC.postproc.effSignal	| Amplitude deconvolution on whole signal or signal above power threshold? (default = 'PT')
+%                     cfg.eBOSC.postproc.effSignal	| Power deconvolution on whole signal or signal above power threshold? (default = 'PT')
 %                     cfg.eBOSC.channel               | Subset of channels? (default: [] = all)
 %                     cfg.eBOSC.trial                 | Subset of trials? (default: [] = all)
 %                     cfg.eBOSC.trial_background      | Subset of trials for background? (default: [] = all)
@@ -50,6 +50,8 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
     for indChan = 1: numel(cfg.eBOSC.channel)
     
         display(['Channel ',num2str(indChan), '/', num2str(numel(cfg.eBOSC.channel)),': chanID ', num2str(cfg.eBOSC.channel(indChan))])
+        
+        cfg.tmp.channel = indChan; % encode current channel for later
 
         %% Step 1: time-frequency wavelet decomposition for whole signal to prepare background fit
 
@@ -101,7 +103,6 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
             cfg.tmp.inputTime = data.time{cfg.tmp.trial};
             cfg.tmp.detectedTime = cfg.tmp.inputTime(cfg.eBOSC.pad.tfr_sample+1:end-cfg.eBOSC.pad.tfr_sample);
             cfg.tmp.finalTime = cfg.tmp.inputTime(cfg.eBOSC.pad.total_sample+1:end-cfg.eBOSC.pad.total_sample);
-            cfg.tmp.channel = indChan; % encode current channel for later
             
             [eBOSC.episodes, detected_ep] = eBOSC_episode_create(cfg,TFR_,detected,eBOSC);
             

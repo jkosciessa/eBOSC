@@ -47,10 +47,10 @@ function [episodesTable, detected_new] = eBOSC_episode_create(cfg,TFR,detected,e
 %                 FrequencyMean: mean frequency of episode (Hz)
 %                 DurationS: episode duration (in sec)
 %                 DurationC: episode duration (in cycles, based on mean frequency)
-%                 AmplitudeMean: mean amplitude of amplitude
+%                 PowerMean: mean amplitude of amplitude
 %                 Onset: episode onset in s
 %                 Offset: episode onset in s
-%                 Amplitude: (cell) time-resolved wavelet-based amplitude estimates during episode
+%                 Power: (cell) time-resolved wavelet-based amplitude estimates during episode
 %                 Frequency: (cell) time-resolved wavelet-based frequency
 %                 RowID: (cell) row index (frequency dimension): following eBOSC_episode_rm_shoulder relative to data excl. detection padding
 %                 ColID: (cell) column index (time dimension)
@@ -125,15 +125,15 @@ while sum(sum(detected_remaining)) > 0
         epData.col(j) = {[single(y(1)-cfg.eBOSC.fstp), single(y(end)-cfg.eBOSC.fstp)]'};
         epData.freq(j) = {single(cfg.eBOSC.F(epData.row{j}))'};
         epData.freqMean(j) = single(avg_frq);
-        epData.amp(j) = {single(TFR(sub2ind(size(TFR),epData.row{j},[epData.col{j}(1):epData.col{j}(2)]')))};
-        epData.ampMean(j) = nanmean(epData.amp{j});
+        epData.pow(j) = {single(TFR(sub2ind(size(TFR),epData.row{j},[epData.col{j}(1):epData.col{j}(2)]')))};
+        epData.powMean(j) = nanmean(epData.pow{j});
         epData.durS(j) = single(length(y) ./ cfg.eBOSC.fsample);
         epData.durC(j) = epData.durS(j)*epData.freqMean(j);
         epData.trial(j) = cfg.tmp.trial;
         epData.chan(j) = cfg.eBOSC.channel(cfg.tmp.channel);
         epData.onset(j) = cfg.tmp.detectedTime(epData.col{j}(1)); % episode onset in absolute time
         epData.offset(j) = cfg.tmp.detectedTime(epData.col{j}(end)); % episode offset in absolute time
-        epData.snr(j) = {sqrt(epData.amp{j})./eBOSC.static.mp(cfg.tmp.channel(1),epData.row{j})'}; % extract (static) background power at frequencies
+        epData.snr(j) = {epData.pow{j}./eBOSC.static.pt(cfg.tmp.channel(1),epData.row{j})'}; % extract (static) background power at frequencies
         epData.snrMean(j) = nanmean(epData.snr{j});
         
         for l = 1:length(y)
@@ -153,9 +153,9 @@ while sum(sum(detected_remaining)) > 0
 end; clear detected_remaining
 
 % prepare for the contingency that no episodes are created
-varNames = {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'AmplitudeMean', 'Onset', 'Offset', 'Amplitude', 'Frequency', 'RowID', 'ColID', 'SNR', 'SNRMean'};
+varNames = {'Trial', 'Channel', 'FrequencyMean', 'DurationS', 'DurationC', 'PowerMean', 'Onset', 'Offset', 'Power', 'Frequency', 'RowID', 'ColID', 'SNR', 'SNRMean'};
 if exist('epData', 'var')
-    episodesTable = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.ampMean', epData.onset', epData.offset', epData.amp', epData.freq', epData.row', epData.col', epData.snr', epData.snrMean',  ...
+    episodesTable = table(epData.trial', epData.chan', epData.freqMean', epData.durS',epData.durC',  epData.powMean', epData.onset', epData.offset', epData.pow', epData.freq', epData.row', epData.col', epData.snr', epData.snrMean',  ...
             'VariableNames', varNames);
 else
     episodesTable  = cell2table(cell(0,numel(varNames)), 'VariableNames', varNames);

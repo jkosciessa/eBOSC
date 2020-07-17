@@ -34,7 +34,7 @@ function [episodes] = eBOSC_episode_rm_shoulder(cfg,detected1,episodes)
         % remove padded time points from episodes
         tmp_col(ex) = [];
         episodes.RowID{j}(ex) = [];
-        episodes.Amplitude{j}(ex) = [];
+        episodes.Power{j}(ex) = [];
         episodes.Frequency{j}(ex) = [];
         episodes.SNR{j}(ex) = [];
         % if nothing remains of episode: track for later deletion
@@ -53,7 +53,7 @@ function [episodes] = eBOSC_episode_rm_shoulder(cfg,detected1,episodes)
         % re-compute mean frequency
         episodes.FrequencyMean(j) = mean(episodes.Frequency{j});
         % re-compute mean amplitude
-        episodes.AmplitudeMean(j) = mean(episodes.Amplitude{j});
+        episodes.PowerMean(j) = mean(episodes.Power{j});
         % re-compute mean SNR
         episodes.SNRMean(j) = nanmean(episodes.SNR{j});
         % re-compute duration

@@ -23,10 +23,10 @@ cfg.eBOSC.wavenumber	= 6;                % wavelet family parameter (time-freque
 cfg.eBOSC.fsample       = 500;              % current sampling frequency of EEG data
 
 % padding
-cfg.eBOSC.pad.tfr_s = .5;                                                                    % padding following wavelet transform to avoid edge artifacts in seconds (bi-lateral)
-cfg.eBOSC.pad.tfr_sample = cfg.eBOSC.pad.tfr_s.*cfg.eBOSC.fsample;                          % automatic sample rate calculation
+cfg.eBOSC.pad.tfr_s = 1;                                                                    % padding following wavelet transform to avoid edge artifacts in seconds (bi-lateral)
+cfg.eBOSC.pad.tfr_sample = cfg.eBOSC.pad.tfr_s.*cfg.eBOSC.fsample;                          % automatic sample point calculation
 cfg.eBOSC.pad.detection_s = .5;                                                             % padding following rhythm detection in seconds (bi-lateral); 'shoulder' for BOSC eBOSC.detected matrix to account for duration threshold
-cfg.eBOSC.pad.detection_sample = cfg.eBOSC.pad.detection_s.*cfg.eBOSC.fsample;              % automatic sample rate calculation
+cfg.eBOSC.pad.detection_sample = cfg.eBOSC.pad.detection_s.*cfg.eBOSC.fsample;              % automatic sample point calculation
 cfg.eBOSC.pad.total_s = cfg.eBOSC.pad.tfr_s + cfg.eBOSC.pad.detection_s;                    % complete padding (WL + shoulder)
 cfg.eBOSC.pad.total_sample = cfg.eBOSC.pad.tfr_sample + cfg.eBOSC.pad.detection_sample;
 cfg.eBOSC.pad.background_s = cfg.eBOSC.pad.tfr_s;                                           % padding of segments for BG (only avoiding edge artifacts)
@@ -41,10 +41,10 @@ cfg.eBOSC.threshold.percentile  = .95;                                      % pe
 cfg.eBOSC.postproc.use      = 'no';         % Post-processing of rhythmic eBOSC.episodes, i.e., wavelet 'deconvolution' (default = 'no')
 cfg.eBOSC.postproc.method   = 'MaxBias';	% Deconvolution method (default = 'MaxBias', FWHM: 'FWHM')
 cfg.eBOSC.postproc.edgeOnly = 'yes';        % Deconvolution only at on- and offsets of eBOSC.episodes? (default = 'yes')
-cfg.eBOSC.postproc.effSignal= 'PT';         % Amplitude deconvolution on whole signal or signal above power threshold? (default = 'PT')
+cfg.eBOSC.postproc.effSignal= 'PT';         % Power deconvolution on whole signal or signal above power threshold? (default = 'PT')
 
 % general processing settings
-cfg.eBOSC.channel = [58:59]; % select channels (default: all)
+cfg.eBOSC.channel = [58:60]; % select channels (default: all)
 cfg.eBOSC.trial = []; % select trials (default: all)
 cfg.eBOSC.trial_background = []; % select trials for background (default: all)
 
@@ -54,8 +54,8 @@ load([pn.eBOSC,  'util/1160_rest_EEG_Rlm_Fhl_rdSeg_Art_EC.mat'], 'data')
 
 %% concatenate trials for resting state here
 
-% data.trial{1} = cat(2,data.trial{:}); data.trial(2:end) = [];
-% data.time{1} = cat(2,data.time{:}); data.time(2:end) = [];
+data.trial{1} = cat(2,data.trial{:}); data.trial(2:end) = [];
+data.time{1} = cat(2,data.time{:}); data.time(2:end) = [];
 data = rmfield(data, 'sampleinfo');
 
 %% run eBOSC
@@ -89,7 +89,7 @@ plot(squeeze(origData), 'k');
 tmpDetected = single(squeeze(nanmean(eBOSC.detected(indChan, indTrial,cfg.eBOSC.F > 8 & cfg.eBOSC.F < 15,:),3))>0); tmpDetected(tmpDetected==0) = NaN;
 plot(squeeze(origData).*tmpDetected', 'r');
 xlim([7.2, 7.9]*10^4)
-xlabel('Time (s)'); ylabel('Amplitude [µV]');
+xlabel('Time (s)'); ylabel('Power [µV]');
 legend({'Original signal'; 'Rhythmic signal'}, ...
     'orientation', 'horizontal', 'location', 'north'); legend('boxoff')
 set(findall(gcf,'-property','FontSize'),'FontSize',26)
@@ -124,7 +124,7 @@ plot(OnsetLine, 'Color', [.5 .5 .5]); clear OnsetLine;
 [orig]=plot(squeeze(origData), 'k');
 [rhythm]=plot(squeeze(origData).*alphaDetected, 'r');
 xlim([7.2, 7.9]*10^4)
-xlabel('Time (s)'); ylabel('Amplitude [µV]');
+xlabel('Time (s)'); ylabel('Power [µV]');
 legend([orig, rhythm], {'Original signal'; 'Rhythmic signal'}, ...
     'orientation', 'horizontal', 'location', 'south'); legend('boxoff')
 set(findall(gcf,'-property','FontSize'),'FontSize',26)
