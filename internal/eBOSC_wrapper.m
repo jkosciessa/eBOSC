@@ -46,6 +46,13 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
     if isempty(cfg.eBOSC.trial_background)
         cfg.eBOSC.trial_background = 1:numel(data.trial);
     end
+    
+    % calculate the sample rates for paddding
+    cfg.eBOSC.pad.tfr_sample = cfg.eBOSC.pad.tfr_s.*cfg.eBOSC.fsample;                          % automatic sample point calculation
+    cfg.eBOSC.pad.detection_sample = cfg.eBOSC.pad.detection_s.*cfg.eBOSC.fsample;              % automatic sample point calculation
+    cfg.eBOSC.pad.total_s = cfg.eBOSC.pad.tfr_s + cfg.eBOSC.pad.detection_s;                    % complete padding (WL + shoulder)
+    cfg.eBOSC.pad.total_sample = cfg.eBOSC.pad.tfr_sample + cfg.eBOSC.pad.detection_sample;
+    cfg.eBOSC.pad.background_sample = cfg.eBOSC.pad.tfr_sample;
 
     for indChan = 1: numel(cfg.eBOSC.channel)
     

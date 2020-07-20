@@ -87,17 +87,12 @@ end; clear count rhythmTimeVector rhythmIdxVector rhythmTime a c k bckgrnd_filt
 % general setup
 cfg.eBOSC.F             = 2.^[1:.125:5.25];
 cfg.eBOSC.wavenumber	= 6;
-cfg.eBOSC.fsample       = 250;
+cfg.eBOSC.fsample       = cfg.simParams.fsample;
 
 % padding
-cfg.eBOSC.pad.tfr_s = 2;
-cfg.eBOSC.pad.tfr_sample = cfg.eBOSC.pad.tfr_s.*cfg.eBOSC.fsample;
-cfg.eBOSC.pad.detection_s = 1;
-cfg.eBOSC.pad.detection_sample = cfg.eBOSC.pad.detection_s.*cfg.eBOSC.fsample;
-cfg.eBOSC.pad.total_s = cfg.eBOSC.pad.tfr_s + cfg.eBOSC.pad.detection_s;
-cfg.eBOSC.pad.total_sample = cfg.eBOSC.pad.tfr_sample + cfg.eBOSC.pad.detection_sample;
-cfg.eBOSC.pad.background_s = cfg.eBOSC.pad.total_s;
-cfg.eBOSC.pad.background_sample = cfg.eBOSC.pad.total_sample;
+cfg.eBOSC.pad.tfr_s = 2;           % padding following wavelet transform to avoid edge artifacts in seconds (bi-lateral)
+cfg.eBOSC.pad.detection_s = 1;     % padding following rhythm detection in seconds (bi-lateral); 'shoulder' for BOSC eBOSC.detected matrix to account for duration threshold
+cfg.eBOSC.pad.background_s = 2;    % padding of segments for BG (only avoiding edge artifacts)
 
 % threshold settings
 cfg.eBOSC.threshold.excludePeak = [8,15];                                   % lower and upper bound of frequencies to be excluded during background fit (Hz) (previously: LowFreqExcludeBG HighFreqExcludeBG)
