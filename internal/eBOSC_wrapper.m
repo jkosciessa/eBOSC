@@ -11,12 +11,12 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
 %                     cfg.eBOSC.pad.total_s           | complete padding (WL + shoulder)
 %                     cfg.eBOSC.pad.background_s      | padding of segments for BG (only avoiding edge artifacts)
 %                     cfg.eBOSC.threshold.excludePeak | lower and upper bound of frequencies to be excluded during background fit (Hz) (previously: LowFreqExcludeBG HighFreqExcludeBG)
-%                     cfg.eBOSC.threshold.duration	| vector of duration thresholds at each frequency (previously: ncyc)
-%                     cfg.eBOSC.threshold.percentile	| percentile of background fit for power threshold
+%                     cfg.eBOSC.threshold.duration    | vector of duration thresholds at each frequency (previously: ncyc)
+%                     cfg.eBOSC.threshold.percentile  | percentile of background fit for power threshold
 %                     cfg.eBOSC.postproc.use          | Post-processing of rhythmic eBOSC.episodes, i.e., wavelet 'deconvolution' (default = 'no')
 %                     cfg.eBOSC.postproc.method       | Deconvolution method (default = 'MaxBias', FWHM: 'FWHM')
 %                     cfg.eBOSC.postproc.edgeOnly     | Deconvolution only at on- and offsets of eBOSC.episodes? (default = 'yes')
-%                     cfg.eBOSC.postproc.effSignal	| Power deconvolution on whole signal or signal above power threshold? (default = 'PT')
+%                     cfg.eBOSC.postproc.effSignal	  | Power deconvolution on whole signal or signal above power threshold? (default = 'PT')
 %                     cfg.eBOSC.channel               | Subset of channels? (default: [] = all)
 %                     cfg.eBOSC.trial                 | Subset of trials? (default: [] = all)
 %                     cfg.eBOSC.trial_background      | Subset of trials for background? (default: [] = all)
@@ -47,7 +47,7 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
         cfg.eBOSC.trial_background = 1:numel(data.trial);
     end
     
-    % calculate the sample rates for paddding
+    % calculate the sample points for paddding
     cfg.eBOSC.pad.tfr_sample = cfg.eBOSC.pad.tfr_s.*cfg.eBOSC.fsample;                          % automatic sample point calculation
     cfg.eBOSC.pad.detection_sample = cfg.eBOSC.pad.detection_s.*cfg.eBOSC.fsample;              % automatic sample point calculation
     cfg.eBOSC.pad.total_s = cfg.eBOSC.pad.tfr_s + cfg.eBOSC.pad.detection_s;                    % complete padding (WL + shoulder)
