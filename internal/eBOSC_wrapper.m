@@ -57,12 +57,7 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
 
         TFR = [];
         for indTrial = 1:numel(cfg.eBOSC.trial)
-            % get data
-            tmp_dat = data.trial{cfg.eBOSC.trial(indTrial)}(cfg.eBOSC.channel(indChan),:);
-            % wavelet transform (NOTE: no check to avoid spectral leakage);
-            % apply correction factor
-            TFR.trial{indTrial} = BOSC_tf(tmp_dat,cfg.eBOSC.F,cfg.eBOSC.fsample,cfg.eBOSC.wavenumber);
-            clear tmp_dat
+            TFR.trial{indTrial} = BOSC_tf(data.trial{indTrial}(e,:),cfg.eBOSC.F,cfg.eBOSC.fsample,cfg.eBOSC.wavenumber);
         end; clear indTrial
 
         %% Step 2: robust background power fit (see 2020 NeuroImage paper)
@@ -79,14 +74,13 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
             % tfr padding is removed to avoid edge artifacts from the wavelet
             % transform. Note that a padding fpr detection remains attached so that there
             % is no problems with too few sample points at the edges to
-            % fulfill the numcycles criterion.
+            % fulfill the duration criterion.
             TFR_ = TFR.trial{indTrial}(:,cfg.eBOSC.pad.tfr_sample+1:end-cfg.eBOSC.pad.tfr_sample);
 
             %% Step 3: detect rhythms and calculate Pepisode
 
             % The next section applies both the power and the duration
             % threshold to detect individual rhythmic segments in the continuous signals.
-
             detected = zeros(size(TFR_));
             for f = 1:length(cfg.eBOSC.F)
                 detected(f,:) = BOSC_detect(TFR_(f,:),pt(f),dt(f),cfg.eBOSC.fsample);
