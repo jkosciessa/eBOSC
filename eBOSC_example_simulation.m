@@ -14,12 +14,11 @@ addpath([pn.root, 'external/BOSC']) % add BOSC functions
 
 %% simulation parameters
 
-cfg.simParams.amplitude     = [0 2 4 6 8 12 16 24];                         % simulated signal power
-cfg.simParams.cycles        = [2 4 8 16 32 64 128 200];                     % simulated signal durations [in cycles]; total of 14 seconds
-cfg.simParams.segmentDur    = 20;
-cfg.simParams.fsample       = 250;
-cfg.simParams.time          = [1/cfg.simParams.fsample:1/cfg.simParams.fsample:cfg.simParams.segmentDur];% time vector of complete segment
-cfg.simParams.repetitions   = 100;                                          % amount of repetitions
+cfg.simParams.amplitude     = [0 2 4 6 8 12 16 24];                         % simulated signal SNR
+cfg.simParams.cycles        = [2 4 8 16 32 64 128 200];                     % simulated signal durations [in cycles]
+cfg.simParams.segmentDur    = 20;                                           % duration of total segement [in seconds]
+cfg.simParams.fsample       = 250;                                          % sampling rate of simulated signal [in Hz]
+cfg.simParams.trials        = 100;                                          % amount of to-be-simulated trials
 cfg.simParams.rhythmFreq    = 10;
 
 %% create background data
@@ -34,7 +33,7 @@ bckgrnd_filt = zeros(1000,5000);
 % seed
 randn('seed',20160118);
 % loop 1000 repetitions
-for k = 1:cfg.simParams.repetitions
+for k = 1:cfg.simParams.trials
     % generate 1/f background
     bckgrnd_filt(k,:) = f_alpha_gaussian(5000,1,1);
     % bandpass filter signal (consecutive low + high-pass filter)
@@ -49,7 +48,8 @@ end; clear k
 count = 1;
 for a = 1:length(cfg.simParams.amplitude)
     for c = 1:length(cfg.simParams.cycles)
-        for k = 1:cfg.simParams.repetitions
+        for k = 1:cfg.simParams.trials
+            data.time{k} = [1/cfg.simParams.fsample:1/cfg.simParams.fsample:cfg.simParams.segmentDur];
             % generate alpha in the middle of the segment
             rhythmTime(c) = round((cfg.simParams.cycles(c)/cfg.simParams.rhythmFreq),3);
             % simulate rhythms as symmetrical around the center
@@ -60,31 +60,27 @@ for a = 1:length(cfg.simParams.amplitude)
             else rhythmTime(c) = timeNew.*0.004;
             end; clear timeNew;
             rhythmTimeVector = [.004:.004:rhythmTime(c)];
-            rhythmIdxVector = (numel(cfg.simParams.time)/2)-(numel(rhythmTimeVector)/2)+1:(numel(cfg.simParams.time)/2)+(numel(rhythmTimeVector)/2);
+            rhythmIdxVector = (numel(data.time{k})/2)-(numel(rhythmTimeVector)/2)+1:(numel(data.time{k})/2)+(numel(rhythmTimeVector)/2);
             % filter entire signal between 8 and 12 Hz (6th order butterworth) (not locally on alpha)
             [tmp_b,tmp_a] = butter(6, [8, 12]/(250/2), 'bandpass');
-            tmp_bpsignal = filter(tmp_b,tmp_a,squeeze(bckgrnd_filt(k,:)));
-            %VarBG = var(tmp_bpsignal(rhythmIdxVector));
-            VarBG = var(tmp_bpsignal);
+            tmp_bpsignal = filter(tmp_b,tmp_a,squeeze(bckgrnd_filt(k,:))); clear tmp_a tmp_b
             % scale rhythm by noise background power
-            targetPower = cfg.simParams.amplitude(a)*VarBG;
-            amplitudeFromRMS = (sqrt(targetPower)*sqrt(2));
+            amplitudeFromRMS = (sqrt(cfg.simParams.amplitude(a)*var(tmp_bpsignal))*sqrt(2)); clear tmp_bpsignal;
             simulatedRhythm = sin(rhythmTimeVector*2*pi*cfg.simParams.rhythmFreq)*amplitudeFromRMS;
-            simulatedRhythm_complete = zeros(1,numel(cfg.simParams.time));
+            simulatedRhythm_complete = zeros(1,numel(data.time{k}));
             simulatedRhythm_complete(1,rhythmIdxVector) = simulatedRhythm;
             % effective segment = BG + rhythm
             data.trial{k}(count,:) = bckgrnd_filt(k,:) + simulatedRhythm_complete;
-            data.time{k} = cfg.simParams.time;
             % create an artificial channel with current amplitude x
             % duration combination
             data.label{count} = ['a_', num2str(a), '_c_', num2str(c)];
             % encode when the rhythm was simulated
             data.rhythm(count,:) = zeros(size(simulatedRhythm_complete));
             data.rhythm(count,rhythmIdxVector) = 1;
-        end % k repetitions
+        end; clear simulatedRhythm_complete simulatedRhythm amplitudeFromRMS
         count = count + 1;
     end
-end
+end; clear count rhythmTimeVector rhythmIdxVector rhythmTime a c k bckgrnd_filt
 
 %% eBOSC parameters
 
@@ -192,7 +188,7 @@ set(findall(gcf,'-property','FontSize'),'FontSize',26)
 
 N_amp = numel(cfg.simParams.amplitude);
 N_cyc = numel(cfg.simParams.cycles);
-N_trial = cfg.simParams.repetitions);
+N_trial = cfg.simParams.trials);
 
 % initialize with NaN
 SignalDetection.MissRate = NaN(N_amp, N_cyc, N_trial, 1);

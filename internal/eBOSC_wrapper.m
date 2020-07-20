@@ -57,7 +57,7 @@ function [eBOSC, cfg] = eBOSC_wrapper(cfg, data)
 
         TFR = [];
         for indTrial = 1:numel(cfg.eBOSC.trial)
-            TFR.trial{indTrial} = BOSC_tf(data.trial{indTrial}(e,:),cfg.eBOSC.F,cfg.eBOSC.fsample,cfg.eBOSC.wavenumber);
+            TFR.trial{indTrial} = BOSC_tf(data.trial{indTrial}(cfg.eBOSC.channel(indChan),:),cfg.eBOSC.F,cfg.eBOSC.fsample,cfg.eBOSC.wavenumber);
         end; clear indTrial
 
         %% Step 2: robust background power fit (see 2020 NeuroImage paper)
