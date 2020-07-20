@@ -75,7 +75,7 @@ origData = data.trial{indTrial}(cfg.eBOSC.channel(indChan), cfg.eBOSC.pad.total_
 figure; hold on;
 plot(log10(cfg.eBOSC.F), log10(eBOSC.static.mp(indChan,:)), 'k--','LineWidth', 1.5); 
 plot(log10(cfg.eBOSC.F), log10(eBOSC.static.pt(indChan,:)), 'k-', 'LineWidth', 1.5)
-plot(log10(cfg.eBOSC.F),log10(eBOSC.static.bg_pow(indChan,:)), 'r-', 'LineWidth', 2)
+plot(log10(cfg.eBOSC.F), eBOSC.static.bg_log10_pow(indChan,:), 'r-', 'LineWidth', 2)
 xlabel('Frequency (log10 Hz)'); ylabel('Power (log 10 a.u.)');
 legend({'Aperiodic fit', 'Statistical power threshold', 'Avg. spectrum'}, ...
     'orientation', 'vertical', 'location', 'SouthWest'); legend('boxoff');
