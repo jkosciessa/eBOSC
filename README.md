@@ -19,7 +19,9 @@ Simulation scripts and data files regarding the 2020 NeuroImage paper can be fou
 ## Installation
 -------------
 
-After downloading, simply add the toolbox path. The toolbox requires a version of MATLAB and has been tested with R2017b. 
+After downloading, simply add the toolbox path. The toolbox requires a version of MATLAB and has been tested with R2017b.
+
+Note: If you use the 'Download ZIP' button to retrieve the repository, the .mat example file may not be downloaded due to a problem in GitHub's lfs implementation. Using 'git clone' to copy the repository should work to retrieve the file.
 
 ## Credits
 -------------
