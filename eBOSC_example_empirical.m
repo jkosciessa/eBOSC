@@ -8,12 +8,10 @@ clear all; clc; restoredefaultpath;
 
 % automatically get script location from editor handle
 tmp = matlab.desktop.editor.getActive;
-pn.eBOSC = [fileparts(tmp.Filename), '/']; clear tmp;
-
-cd(pn.eBOSC)
-addpath(pn.eBOSC);
-addpath([pn.eBOSC, 'dev/']);
-addpath([pn.eBOSC, 'external/BOSC/']);
+pn.root = [fileparts(tmp.Filename), '/']; clear tmp;
+addpath([pn.root, 'internal']) % add eBOSC functions
+addpath([pn.root, 'external']) % add f_alpha_gaussian function
+addpath([pn.root, 'external/BOSC']) % add BOSC functions
 
 %% eBOSC parameters
 
@@ -50,7 +48,7 @@ cfg.eBOSC.trial_background = []; % select trials for background (default: all)
 
 %% load data
 
-load([pn.eBOSC,  'util/1160_rest_EEG_Rlm_Fhl_rdSeg_Art_EC.mat'], 'data')
+load([pn.root,  'util/1160_rest_EEG_Rlm_Fhl_rdSeg_Art_EC.mat'], 'data')
 
 %% concatenate trials for resting state here
 

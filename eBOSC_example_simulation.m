@@ -1,4 +1,6 @@
-% This function simulates alpha of varying cycles and amplitudes superimposed
+% Example script for eBOSC using simulations
+
+% This script simulates alpha of varying cycles and amplitudes superimposed
 % on pink noise and runs eBOSC on these simulated signals. Afterwards,
 % signal detection measures are calculated.
 
@@ -6,18 +8,9 @@
 % automatically get script location from editor handle
 tmp = matlab.desktop.editor.getActive;
 pn.root = [fileparts(tmp.Filename), '/']; clear tmp;
-pn.backgroundData  = [pn.root, 'data/']; % INDICATE LOCATION OF SIMULATED BACKGROUND
-pn.out = [pn.root, 'data/']; % CHOOSE OUTPUT DIRECTORY
-addpath([[pn.root, 'external']]) % add f_alpha_gaussian function
-
-%% add eBOSC toolbox
-
-addpath('/Users/kosciessa/Desktop/eBOSCRepoTest/eBOSC') % TMP path to updated toolbox!
-addpath('/Users/kosciessa/Desktop/eBOSCRepoTest/eBOSC/external/BOSC') % TMP path to updated toolbox!
-
-%% encode run date
-
-cfg.runDate = date;
+addpath([pn.root, 'internal']) % add eBOSC functions
+addpath([pn.root, 'external']) % add f_alpha_gaussian function
+addpath([pn.root, 'external/BOSC']) % add BOSC functions
 
 %% simulation parameters
 
@@ -82,8 +75,10 @@ for a = 1:length(cfg.simParams.amplitude)
             % effective segment = BG + rhythm
             data.trial{k}(count,:) = bckgrnd_filt(k,:) + simulatedRhythm_complete;
             data.time{k} = cfg.simParams.time;
+            % create an artificial channel with current amplitude x
+            % duration combination
             data.label{count} = ['a_', num2str(a), '_c_', num2str(c)];
-            % encode when the rhythm was simulateda
+            % encode when the rhythm was simulated
             data.rhythm(count,:) = zeros(size(simulatedRhythm_complete));
             data.rhythm(count,rhythmIdxVector) = 1;
         end % k repetitions
@@ -91,7 +86,7 @@ for a = 1:length(cfg.simParams.amplitude)
     end
 end
 
-%%  eBOSC parameters
+%% eBOSC parameters
 
 % general setup
 cfg.eBOSC.F             = 2.^[1:.125:5.25];
@@ -130,7 +125,7 @@ cfg.eBOSC.trial_background = []; % select trials for background (default: all)
 
 %% Sanity-check plots
 
-indChan = 62; indTrial = 1; % Here we select the first trial and first channel we encoded (see cfg.eBOSC.channel).
+indChan = 62; indTrial = 1; % Here we select the first trial and 62nd (artificial) channel we encoded (see cfg.eBOSC.channel).
 
 disp(['Results are for trial ', num2str(cfg.eBOSC.trial(indTrial)), ' at channel ', data.label{cfg.eBOSC.channel(indChan)}])
 
@@ -262,7 +257,6 @@ for a = 1:N_amp
 end
 
 % plot signal detection overview
-
 figure; hold on;
 scatter(squeeze(SignalDetection.FARate(:)),squeeze(SignalDetection.HitRate(:)),10, 'k', 'filled')
 xlabel('False positive rate') 
