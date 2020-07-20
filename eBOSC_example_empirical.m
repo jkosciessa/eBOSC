@@ -1,7 +1,5 @@
 % Example script for eBOSC analysis
 
-%% initial clean-up
-
 clear all; clc; restoredefaultpath;
 
 %% add eBOSC toolbox with subdirectories
