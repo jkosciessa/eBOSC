@@ -8,7 +8,6 @@ clear all; clc; restoredefaultpath;
 tmp = matlab.desktop.editor.getActive;
 pn.root = [fileparts(tmp.Filename), '/']; clear tmp;
 addpath([pn.root, 'internal']) % add eBOSC functions
-addpath([pn.root, 'external']) % add f_alpha_gaussian function
 addpath([pn.root, 'external/BOSC']) % add BOSC functions
 
 %% eBOSC parameters
@@ -40,7 +39,7 @@ cfg.eBOSC.postproc.edgeOnly = 'yes';        % Deconvolution only at on- and offs
 cfg.eBOSC.postproc.effSignal= 'PT';         % Power deconvolution on whole signal or signal above power threshold? (default = 'PT')
 
 % general processing settings
-cfg.eBOSC.channel = [58:60]; % select channels (default: all)
+cfg.eBOSC.channel = [58:60]; % select posterior channels (default: all)
 cfg.eBOSC.trial = []; % select trials (default: all)
 cfg.eBOSC.trial_background = []; % select trials for background (default: all)
 
