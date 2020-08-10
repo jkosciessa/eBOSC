@@ -57,7 +57,7 @@ function [episodes] = eBOSC_episode_rm_shoulder(cfg,detected1,episodes)
         % re-compute mean SNR
         episodes.SNRMean(j) = nanmean(episodes.SNR{j});
         % re-compute duration
-        episodes.DurationS(j) = size(episodes{j,1},1) / cfg.eBOSC.fsample; clear ex
+        episodes.DurationS(j) = (episodes.ColID{j}(2)-episodes.ColID{j}(1)+1) / cfg.eBOSC.fsample; clear ex
         episodes.DurationC(j) = episodes.DurationS(j)*episodes.FrequencyMean(j);
         % update absolute on-/offsets
         episodes.Onset(j) = cfg.tmp.finalTime(episodes.ColID{j}(1)); % episode onset in absolute time

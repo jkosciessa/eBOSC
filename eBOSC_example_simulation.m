@@ -183,7 +183,7 @@ set(findall(gcf,'-property','FontSize'),'FontSize',26)
 
 N_amp = numel(cfg.simParams.amplitude);
 N_cyc = numel(cfg.simParams.cycles);
-N_trial = cfg.simParams.trials);
+N_trial = cfg.simParams.trials;
 
 % initialize with NaN
 SignalDetection.MissRate = NaN(N_amp, N_cyc, N_trial, 1);
