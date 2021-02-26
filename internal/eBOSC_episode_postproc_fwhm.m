@@ -29,6 +29,7 @@ function [episodes_new, detected_new] = eBOSC_episode_postproc_fwhm(cfg, episode
 %           episodes_new | updated table of episodes
 %           detected_new | updated binary detected matrix
 
+disp("Applying FWHM post-processing ...")
 % re-initialize detected_new (for post-proc results)
 detected_new = zeros(size(TFR));
 
@@ -125,13 +126,14 @@ if ~isempty(episodes)
         for i = 1:size(ind_epsd,1)  
             % check for passing the duration requirement
             % get average frequency
-            avg_frq = mean(f_(ind_epsd(i,1):ind_epsd(i,2)));
+            tmp_col = ind_epsd(i,1):ind_epsd(i,2);
+            avg_frq = mean(f_(tmp_col));
             % match to closest frequency
             [~, indF] = min(abs(cfg.eBOSC.F-avg_frq));
             % check number of data points to fulfill number of cycles criterion
             num_pnt = floor((cfg.eBOSC.fsample ./ avg_frq) .* (cfg.eBOSC.threshold.duration(indF))); clear indF;
             % if this duration criterion is still fulfilled, encode in table
-            if num_pnt <= size(f_,2)
+            if num_pnt <= size(tmp_col,2)
                 % exchange x and y with relevant info
                 % update all data in table with new episode limits
                 epData.row(cnt) = {episodes.RowID{e}(ind_epsd(i,1):ind_epsd(i,2))};

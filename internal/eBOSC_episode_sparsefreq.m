@@ -1,5 +1,7 @@
 function [detected] = eBOSC_episode_sparsefreq(cfg, detected, TFR)
 
+    disp('Creating sparse detected matrix ...')
+
     freqWidth = (2/cfg.eBOSC.wavenumber)*cfg.eBOSC.F;
     lowFreq = cfg.eBOSC.F-(freqWidth/2);
     highFreq = cfg.eBOSC.F+(freqWidth/2);

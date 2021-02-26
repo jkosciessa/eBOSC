@@ -22,6 +22,8 @@ function [episodes] = eBOSC_episode_rm_shoulder(cfg,detected1,episodes)
 % as the point of the padding of the detected matrix is exactly to account
 % for allowing the presence of a few cycles.
 
+    disp("Removing padding from detected episodes")
+    
     ind1 = cfg.eBOSC.pad.detection_sample+1;
     ind2 = size(detected1,2) - cfg.eBOSC.pad.detection_sample;
     cnt = 1;
