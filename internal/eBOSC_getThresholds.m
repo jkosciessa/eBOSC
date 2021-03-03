@@ -51,8 +51,9 @@ function [eBOSC, pt, dt] = eBOSC_getThresholds(cfg, TFR, eBOSC)
             % find empirical peak in specified range
             freqInd1 = find(cfg.eBOSC.F >= cfg.eBOSC.threshold.excludePeak(indExFreq,1), 1, 'first');
             freqInd2 = find(cfg.eBOSC.F <= cfg.eBOSC.threshold.excludePeak(indExFreq,2), 1, 'last');
-            [~, indPos] = max(mean(BG(freqInd1:freqInd2,:),2));
-            indPos = freqInd1+indPos;
+            freqidx = freqInd1:freqInd2;
+            [~, indPos] = max(mean(BG(freqidx,:),2));
+            indPos = freqidx(indPos);
             % approximate wavelet extension in frequency domain
             % note: we do not remove the specified range, but the FWHM
             % around the empirical peak

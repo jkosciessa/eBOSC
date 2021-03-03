@@ -34,7 +34,7 @@ cfg.eBOSC.postproc.edgeOnly = 'yes';        % Deconvolution only at on- and offs
 cfg.eBOSC.postproc.effSignal= 'PT';         % Power deconvolution on whole signal or signal above power threshold? (default = 'PT')
 
 % general processing settings
-cfg.eBOSC.channel = [58:60]; % select posterior channels (default: all)
+cfg.eBOSC.channel = [59]; % select posterior channels (default: all)
 cfg.eBOSC.trial = []; % select trials (default: all)
 cfg.eBOSC.trial_background = []; % select trials for background (default: all)
 
@@ -106,17 +106,18 @@ for indEp = 1:numel(idx_alpha)
     % Mark all periods with episodes falling into the alpha range
     alphaDetected(eBOSC.episodes.ColID{idx_alpha(indEp)}(1):eBOSC.episodes.ColID{idx_alpha(indEp)}(end)) = 1;
 end; clear idx_alpha;
-h = figure('units','normalized','position',[.1 .1 .7 .3]); hold on; 
-scatter(idx_onset, repmat(100,1,numel(idx_onset)), 75, [.5 .5 .5], 'filled')
+
+h = figure('units','normalized','position',[.1 .1 .3 .2]); hold on; 
+scatter(idx_onsetTime, repmat(100,1,numel(idx_onset)), 75, [.5 .5 .5], 'filled')
 OnsetLine = squeeze(origData);
-OnsetLine(idx_onset) = 100; clear idx_onset idx_onsetTime;
-plot(OnsetLine, 'Color', [.5 .5 .5]); clear OnsetLine;
-[orig]=plot(squeeze(origData), 'k');
-[rhythm]=plot(squeeze(origData).*alphaDetected, 'r');
-xlim([7.2, 7.9]*10^4)
+OnsetLine(idx_onsetTime) = 100; clear idx_onset idx_onsetTime;
+plot(cfg.tmp.finalTime,OnsetLine, 'Color', [.5 .5 .5]); clear OnsetLine;
+[orig]=plot(cfg.tmp.finalTime,squeeze(origData), 'k');
+[rhythm]=plot(cfg.tmp.finalTime,squeeze(origData).*alphaDetected, 'r');
+xlim([162, 167])
 xlabel('Time (s)'); ylabel('Power [µV]');
 legend([orig, rhythm], {'Original signal'; 'Rhythmic signal'}, ...
-    'orientation', 'horizontal', 'location', 'south'); legend('boxoff')
+    'orientation', 'horizontal', 'location', 'NorthEast'); legend('boxoff')
 set(findall(gcf,'-property','FontSize'),'FontSize',26)
 
 %% optional: delete unnecessary fields prior to saving
