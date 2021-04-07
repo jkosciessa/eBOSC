@@ -1,5 +1,7 @@
 # eBOSC: extended Better OSCillation Detection
 
+[![DOI](https://zenodo.org/badge/138600886.svg)](https://zenodo.org/badge/latestdoi/138600886)
+
 ## Overview
 --------
 
