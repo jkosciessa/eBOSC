@@ -103,6 +103,10 @@ while sum(sum(detected_remaining)) > 0
                 % (i.e. following the longer episodes).
                 tmp_data = tmp_B1(x(k)-cfg.eBOSC.fstp:x(k)+cfg.eBOSC.fstp,y(k)+1);
                 tmp = find(tmp_data == max(tmp_data));
+                % if there is more than one maximum, choose first solution
+                if size(tmp,1)>1
+                    tmp=tmp(1,1);
+                end
             end
             x(k+1) = x(k) + tmp - cfg.eBOSC.fstp - 1;
             k = k + 1;
